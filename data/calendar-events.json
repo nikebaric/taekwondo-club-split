@@ -1,0 +1,15 @@
+[
+  {
+    "id": "ce000001-0000-4000-8000-000000000001",
+    "title": "— unesite naziv događaja —",
+    "date": "2025-09-20",
+    "place": "Zagreb",
+    "organizator": "Hrvatski ITF savez"
+  },
+  {
+    "id": "ce000001-0000-4000-8000-000000000002",
+    "title": "— unesite naziv događaja —",
+    "date": "2025-05-10",
+    "place": "Split"
+  }
+]

@@ -1,0 +1,31 @@
+[
+  {
+    "id": "ac000001-0000-4000-8000-000000000001",
+    "medal": "gold",
+    "discipline": "forme",
+    "name": "— unesite ime natjecatelja —",
+    "competition": "Državno / regionalno prvenstvo (ITF)",
+    "date": "2024-09-14",
+    "ageGroup": "kadeti",
+    "kategorija": "do 45 kg",
+    "pojas": "zuti"
+  },
+  {
+    "id": "ac000001-0000-4000-8000-000000000002",
+    "medal": "silver",
+    "discipline": "borbe",
+    "name": "— unesite ime natjecatelja —",
+    "competition": "Open natjecanje",
+    "date": "2024-03-22",
+    "ageGroup": "juniori"
+  },
+  {
+    "id": "ac000001-0000-4000-8000-000000000003",
+    "medal": "bronze",
+    "discipline": "borbe",
+    "name": "— unesite ime natjecatelja —",
+    "competition": "Memorijal / klupsko natjecanje",
+    "date": "2023-11-05",
+    "ageGroup": "seniori"
+  }
+]

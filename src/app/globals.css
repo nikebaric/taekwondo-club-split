@@ -1,0 +1,47 @@
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+
+:root {
+  /*
+   * Svijetla tema — ista bijela (#fff) kao podloga PNG loga;
+   * dubinski slojevi minimalno odvojeni ili bijeli + obrubi.
+   */
+  --background: #ffffff;
+  --foreground: #0f172a;
+  --surface: #ffffff;
+  /* Suptilan kontrast naspram --background — samo za „trake“ sekcija */
+  --surface-muted: #fafafa;
+  --surface-deep: #f4f4f5;
+  --muted: #64748b;
+
+  --accent: #1d4ed8;
+  --accent-glow: rgba(29, 78, 216, 0.22);
+
+  --brand-gold: #b8942e;
+  --brand-gold-soft: rgba(184, 148, 46, 0.14);
+
+  --border-subtle: rgba(15, 23, 42, 0.1);
+
+  /* Kartice / header — diskretna dubina bez „teškog“ sivog */
+  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.05);
+  --shadow-card: 0 2px 8px -2px rgba(15, 23, 42, 0.06), 0 1px 2px -1px rgba(15, 23, 42, 0.04);
+  --shadow-card-hover: 0 12px 28px -10px rgba(15, 23, 42, 0.12), 0 4px 8px -4px rgba(15, 23, 42, 0.06);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+}
+
+::selection {
+  background: rgba(29, 78, 216, 0.14);
+  color: var(--foreground);
+}
+
+/** Svijetli članci (About, Treneri, novosti) */
+.prose-site {
+  --tw-prose-body: var(--muted);
+  --tw-prose-headings: var(--foreground);
+  --tw-prose-links: var(--accent);
+  --tw-prose-bold: var(--foreground);
+}

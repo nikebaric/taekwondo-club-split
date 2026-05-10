@@ -1,0 +1,150 @@
+[
+  {
+    "slug": "treneri-i-majstori",
+    "title": "Treneri i majstori",
+    "description": "ITF dobok, crni pojasevi i klupski trenutci s trenerima.",
+    "items": [
+      {
+        "kind": "image",
+        "src": "/galerija/treneri-frane-gringo-neno.png",
+        "alt": "Tri majstora taekwondoa u doboku s crnim pojasima na tatamiju",
+        "caption": "Frane, Gringo i Neno — majstori kluba"
+      },
+      {
+        "kind": "image",
+        "src": "/galerija/treneri-janez-i-nenad.png",
+        "alt": "Dva trenera u stavu u dvorani",
+        "caption": "Treneri na treningu"
+      },
+      {
+        "kind": "image",
+        "src": "/galerija/treneri-neno-mirko.png",
+        "alt": "Dva trenera u doboku s crnim pojasima u školskoj dvorani",
+        "caption": "Iskusni treneri kluba"
+      },
+      {
+        "kind": "image",
+        "src": "/galerija/trener-nenad-bulovic-vi-dan.png",
+        "alt": "Dr. sc. Nenad Bulović u doboku, VI. DAN ITF",
+        "caption": "Dr. sc. Nenad Bulović, VI. DAN (2023)"
+      },
+      {
+        "kind": "image",
+        "src": "/galerija/trener-neno-kod-lutke-2023.png",
+        "alt": "Glavni trener uz BOB lutku za trening",
+        "caption": "Trener uz lutku za trening"
+      },
+      {
+        "kind": "image",
+        "src": "/galerija/trener-neno-i-polaznik-leo-1.png",
+        "alt": "Trener i polaznik s žutim pojasem u dvorani",
+        "caption": "Trener s polaznikom"
+      },
+      {
+        "kind": "image",
+        "src": "/galerija/trener-neno-i-polaznik-leo-3.png",
+        "alt": "Trener i polaznik na tatamiju",
+        "caption": "Trening s najmlađima"
+      }
+    ]
+  },
+  {
+    "slug": "trening-i-zivot-kluba",
+    "title": "Trening i život kluba",
+    "description": "Atmosfera u dvorani — rad s djecom i oprema za trening.",
+    "items": [
+      {
+        "kind": "image",
+        "src": "/galerija/grupa-clanovi-dvorana.png",
+        "alt": "Skupina članova kluba u doboku — djeca, juniori i odrasli s trenerima",
+        "caption": "Zajednica u dvorani — različiti pojasevi"
+      },
+      {
+        "kind": "image",
+        "src": "/galerija/trening-os-brda-dvorana.png",
+        "alt": "Djeca na treningu u školskoj dvorani s trenerom",
+        "caption": "Trening u dvorani (Osnovna škola „BRDA“)"
+      },
+      {
+        "kind": "image",
+        "src": "/galerija/trening-niko-sparring-stav.png",
+        "alt": "Polaznik u doboku i sparing rukavicama u pripremljenom stavu",
+        "caption": "Trening tehnike i sparing opreme"
+      },
+      {
+        "kind": "image",
+        "src": "/galerija/trening-niko-sparring-stav-2.png",
+        "alt": "Polaznik u doboku s ITF oznakom i sparing rukavicama",
+        "caption": "Trening u dvorani"
+      }
+    ]
+  },
+  {
+    "slug": "arhiva-i-povijest",
+    "title": "Arhiva i povijest",
+    "description": "Stare fotografije, demonstracije i uspomene iz klupske povijesti.",
+    "items": [
+      {
+        "kind": "image",
+        "src": "/galerija/arhiva-demonstracija-yop-chagi.png",
+        "alt": "Demonstracija letačkog side kicka u sparing opremi",
+        "caption": "Demonstracija tehnike (arhiva)"
+      },
+      {
+        "kind": "image",
+        "src": "/galerija/arhiva-sparring.png",
+        "alt": "Dva borca u sparingu, arhivska fotografija",
+        "caption": "Sparing (arhiva)"
+      },
+      {
+        "kind": "image",
+        "src": "/galerija/arhiva-sparring-dragan-more.png",
+        "alt": "Dva majstora u sparingu na obali — crni pojasevi, sunčan dan",
+        "caption": "Sparing na obali (arhiva)"
+      },
+      {
+        "kind": "image",
+        "src": "/galerija/arhiva-naslovnica-knjige-koreja.png",
+        "alt": "Naslovnica knjige — Koreja",
+        "caption": "Iz klupske povijesti — Koreja"
+      }
+    ]
+  },
+  {
+    "slug": "promocija-i-grafika",
+    "title": "Promocija i grafika",
+    "description": "Poster kluba, letak i ilustrativna grafika.",
+    "items": [
+      {
+        "kind": "image",
+        "src": "/galerija/promo-grb-itf-split.png",
+        "alt": "Službeni grb Taekwon-do kluba Split — ITF identitet na bijeloj podlozi",
+        "caption": "Grb kluba (ITF)"
+      },
+      {
+        "kind": "image",
+        "src": "/galerija/promo-poster-taekwondo-split.png",
+        "alt": "Poster Taekwondo klub Split s akrobatskim udarcima",
+        "caption": "Poster Taekwondo klub Split"
+      },
+      {
+        "kind": "image",
+        "src": "/galerija/promo-letak-2023-stranica-1.png",
+        "alt": "Letak kluba 2023, prva stranica",
+        "caption": "Trodjelni letak 2023 — stranica 1"
+      },
+      {
+        "kind": "image",
+        "src": "/galerija/promo-letak-2023-stranica-2.png",
+        "alt": "Letak kluba 2023, druga stranica",
+        "caption": "Trodjelni letak 2023 — stranica 2"
+      },
+      {
+        "kind": "image",
+        "src": "/galerija/grafika-tim-ilustracija.png",
+        "alt": "Ilustracija grupe taekwondo majstora s crnim pojasevima",
+        "caption": "Ilustrativna grafika tima"
+      }
+    ]
+  }
+]
