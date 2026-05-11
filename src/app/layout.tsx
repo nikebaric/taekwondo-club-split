@@ -55,7 +55,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="hr" className={`${dmSans.variable} ${bebas.variable} h-full scroll-smooth antialiased`}>
+    <html lang="hr" data-scroll-behavior="smooth" className={`${dmSans.variable} ${bebas.variable} h-full antialiased`}>
       <body
         className={`${dmSans.className} min-h-full flex flex-col bg-[var(--background)] text-[var(--foreground)]`}
       >
