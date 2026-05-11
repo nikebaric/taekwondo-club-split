@@ -1,3 +1,18 @@
+/**
+ * ArticleAdminToolbar — admin edit/delete buttons shown on news article pages.
+ *
+ * KEY CONCEPTS:
+ * - **Client Component for interactivity:** "use client" is needed for the delete
+ *   button's onClick handler and the window.confirm dialog.
+ * - **Conditional server-side rendering:** This component is only rendered when the
+ *   parent (a Server Component) detects an admin session. The auth check happens on
+ *   the server — this component never appears in the HTML for non-admin users.
+ * - **Confirmation dialog pattern:** `window.confirm()` shows a native browser dialog
+ *   that blocks execution until the user responds. If they cancel, we return early
+ *   and skip the delete. This is a simple UX safeguard for destructive actions.
+ * - **`void` expression:** `void handleDelete()` tells TypeScript/ESLint that we
+ *   intentionally discard the Promise — preventing "unhandled promise" warnings.
+ */
 "use client";
 
 import Link from "next/link";
@@ -6,6 +21,7 @@ type Props = { slug: string };
 
 export function ArticleAdminToolbar({ slug }: Props) {
   async function handleDelete() {
+    // window.confirm() returns false if the user clicks "Cancel" — early return prevents deletion.
     if (!window.confirm("Obrisati ovaj članak? Ova radnja se ne može poništiti.")) return;
     const res = await fetch(`/api/news/${encodeURIComponent(slug)}`, {
       method: "DELETE",
@@ -16,6 +32,8 @@ export function ArticleAdminToolbar({ slug }: Props) {
       window.alert(data.error ?? "Brisanje nije uspjelo.");
       return;
     }
+    // Full page navigation (not router.push) ensures the server re-renders
+    // the news list without the deleted article.
     window.location.assign("/news");
   }
 

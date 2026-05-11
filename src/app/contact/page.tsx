@@ -1,3 +1,17 @@
+/**
+ * src/app/contact/page.tsx — Contact page (route: /contact)
+ *
+ * KEY CONCEPTS:
+ * - JSON-LD structured data — a machine-readable description of the
+ *   business (schema.org) injected via a <script type="application/ld+json">
+ *   tag. Search engines (Google, Bing) read this to display rich results
+ *   (address, map pin, business hours) in search listings.
+ * - Mixing Server and Client Components — the page itself is a Server
+ *   Component (no "use client"), but it renders `<ContactForm />` which
+ *   IS a Client Component (it needs useState for form inputs, event
+ *   handlers for onSubmit, etc.). The Server Component streams its HTML
+ *   and includes the Client Component's JS bundle automatically.
+ */
 import type { Metadata } from "next";
 import { ContactForm } from "@/components/contact-form";
 import { SectionHeading } from "@/components/section-heading";
@@ -8,6 +22,10 @@ export const metadata: Metadata = {
   description: `${contactPageLabel} — ${site.name}: telefon i obrazac za upit. Adresa i raspored treninga na stranici Treninzi.`,
 };
 
+// JSON-LD (JavaScript Object Notation for Linked Data) is the format
+// Google recommends for structured data. This function builds a
+// schema.org/SportsActivityLocation object describing the club so that
+// search engines can show rich results (map, address, social links).
 function contactJsonLd() {
   const streetAddress = formatClubAddressSingleLine();
   const sameAs = [site.social.facebook, site.social.instagram, site.social.youtube].filter(
@@ -40,6 +58,10 @@ function contactJsonLd() {
 export default function ContactPage() {
   return (
     <>
+      {/* Inject the JSON-LD structured data into <head> via a <script> tag.
+          dangerouslySetInnerHTML is used because React escapes {} in JSX
+          children, which would break the JSON. The name is intentionally
+          scary to remind you to only pass trusted content. */}
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: contactJsonLd() }} />
 
       <div className="mx-auto max-w-6xl px-4 pb-20 pt-16 sm:px-6 sm:pt-24">
@@ -78,6 +100,10 @@ export default function ContactPage() {
             Ispunite obrazac za slanje poruke — odgovor stiže na adresu koju navedete.
           </p>
           <div className="mt-8">
+            {/* ContactForm is a Client Component ("use client") because it
+                needs interactivity: form state, validation, submit handler.
+                A Server Component can render Client Components — the
+                boundary is automatic; Next.js bundles only the JS needed. */}
             <ContactForm />
           </div>
         </div>

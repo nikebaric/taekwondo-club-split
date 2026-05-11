@@ -1,3 +1,21 @@
+/**
+ * src/app/page.tsx — Homepage (route: /)
+ *
+ * KEY CONCEPTS:
+ * - In the App Router, `page.tsx` inside a folder defines the route's UI.
+ *   This file sits directly in `app/`, so it maps to the root URL `/`.
+ * - This is a SERVER COMPONENT (the default). Notice:
+ *   • No "use client" directive at the top.
+ *   • The component is `async` — you can `await` data directly inside it.
+ *   • No useState/useEffect — data fetching happens on the server before
+ *     any HTML is sent to the browser.
+ * - `next/image` (Image component) automatically optimises images: it
+ *   serves modern formats (WebP/AVIF), lazy-loads by default, and
+ *   prevents Cumulative Layout Shift by reserving space.
+ * - `next/link` (Link component) enables CLIENT-SIDE navigation — clicking
+ *   a Link does NOT trigger a full page reload; React streams in the new
+ *   route's Server Component output and swaps the UI instantly.
+ */
 import Image from "next/image";
 import Link from "next/link";
 import { HomeClubPhotoStrip } from "@/components/home-club-photo-strip";
@@ -8,6 +26,10 @@ import { contactPageLabel, phoneToTelHref, site } from "@/config/site";
 import { fetchNewsPosts } from "@/lib/news-queries";
 import { getListingCover, stripHtml } from "@/lib/news-post";
 
+// async Server Component — data is fetched on the server at request time
+// (or at build time for statically generated pages). The resolved data is
+// embedded directly in the HTML sent to the client. No loading spinners,
+// no client-side fetch waterfalls.
 export default async function Home() {
   const latestPosts = await fetchNewsPosts(6);
 
@@ -31,6 +53,11 @@ export default async function Home() {
   return (
     <>
       <section className="relative min-h-[min(92vh,840px)] overflow-hidden border-b border-slate-200/80">
+        {/* next/image props explained:
+            - `fill`     — image fills its positioned parent (no width/height needed)
+            - `priority` — disables lazy-loading; use for above-the-fold hero images
+            - `sizes`    — tells the browser which image width to download at each
+                           viewport size, enabling responsive srcset selection */}
         <Image
           src={placeholders.hero}
           alt="Članovi kluba u doboku nakon polaganja pojaseva"
@@ -54,6 +81,9 @@ export default async function Home() {
               i kontrolirano sparingovanje u sigurnom i poštovanjem ispunjenom okruženju.
             </p>
             <div className="flex flex-wrap gap-4">
+              {/* next/link's <Link> renders an <a> tag but intercepts the click
+                  to perform a client-side navigation — no full page reload.
+                  Prefetching happens automatically when the link is in the viewport. */}
               <Link
                 href="/contact"
                 className="inline-flex max-w-full items-center justify-center rounded-full bg-[var(--accent)] px-5 py-3.5 text-center text-xs font-semibold leading-snug text-white shadow-[0_0_28px_-6px_var(--accent-glow)] transition hover:brightness-110 active:scale-[0.98] sm:px-6 sm:text-sm"
@@ -141,6 +171,9 @@ export default async function Home() {
           subtitle="Dva glavna programa — kondicija, tehnika i odgojne vrijednosti, prilagođeno dobnim skupinama."
         />
         <div className="mt-14 grid gap-8 md:grid-cols-2">
+          {/* .map() is the standard React pattern for rendering lists.
+              Each item MUST have a unique `key` so React can efficiently
+              reconcile the DOM when the list changes. */}
           {programCards.map((card) => (
             <article
               key={card.title}

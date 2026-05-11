@@ -1,31 +1,52 @@
-/** Novosti pohranjene lokalno u `data/news-posts.json`. */
+/**
+ * CONCEPT: TypeScript Type Definition for a Data Model
+ *
+ * This file defines the shape of a news post as stored on disk (JSON).
+ * It's the "source of truth" type — other files transform this into different
+ * shapes for display or editing.
+ *
+ * Key TypeScript concepts:
+ * - `type` keyword — defines an object shape (similar to `interface` but cannot
+ *   be extended with `extends`; preferred for data records)
+ * - Optional properties (`?`) — the field may be missing from the JSON entirely
+ * - Union with null (`string | null`) — the field exists but may be explicitly null
+ * - `?: string | null` — field can be absent, undefined, OR null (maximum flexibility
+ *   for JSON data that evolves over time)
+ * - `Array<{...}>` — inline anonymous type for array elements
+ *
+ * News posts stored locally in `data/news-posts.json`.
+ */
 export type LocalNewsPost = {
   id: number;
   slug: string;
   title: string;
-  /** Kratak tekst za karticu / excerpt */
+  /** Short text for card / excerpt */
   excerptPlain: string;
-  /** HTML tijelo članka (sigurno escapeano pri unosu) */
+  /** HTML article body (safely escaped on input) */
   bodyHtml: string;
   date: string;
-  /** Relativni URL, npr. /uploads/news/foo.jpg */
+
+  // Optional + nullable fields below. The `?` means the key itself may not
+  // exist in the JSON (older posts lack these fields). The `| null` allows
+  // explicit null values (e.g., when a user removes an image).
+  /** Relative URL, e.g. /uploads/news/foo.jpg */
   imageSrc?: string | null;
-  /** MP4 ili slično u public/uploads */
+  /** MP4 or similar in public/uploads */
   videoSrc?: string | null;
-  /** Potpis pri objavi, npr. "Created by Nenad Bulović" */
+  /** Byline on publish, e.g. "Created by Nenad Bulović" */
   createdByLine?: string | null;
-  /** Pun tekst opisa (za uređivanje); ako nedostaje, izvlači se iz bodyHtml */
+  /** Full description text (for editing); if missing, extracted from bodyHtml */
   descriptionPlain?: string | null;
-  /** Zapamćeni YouTube embed URL (opcionalno, za uređivanje) */
+  /** Stored YouTube embed URL (optional, for editing) */
   youtubeEmbedStored?: string | null;
-  /** MIME za lokalni video kad je spašen */
+  /** MIME type for the local video when saved */
   videoMime?: string | null;
-  /** Više slika ispod teksta (isti prikaz kao galerija) */
+  /** Multiple images below text (same layout as gallery) */
   galleryImageSrcs?: string[] | null;
-  /** Više YouTube ugrađenih URL-ova (nocookie embed) */
+  /** Multiple YouTube embed URLs (nocookie embed) */
   galleryYoutubeEmbeds?: string[] | null;
-  /** Više lokalnih video zapisa */
+  /** Multiple local video files */
   galleryVideos?: Array<{ src: string; mime: string }> | null;
-  /** Koja od slika u galeriji je naslovna ispod naslova (mora biti jedna od galleryImageSrcs) */
+  /** Which gallery image is the hero cover below the title (must be one of galleryImageSrcs) */
   coverImageSrc?: string | null;
 };

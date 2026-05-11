@@ -1,22 +1,43 @@
+/**
+ * LoginForm — handles user authentication via email and password.
+ *
+ * KEY CONCEPTS:
+ * - **Controlled inputs:** Each input's `value` is tied to state (`email`, `password`),
+ *   and `onChange` updates that state. React controls the input value at all times.
+ *   This pattern gives you full control over input data (for validation, formatting, etc.).
+ * - **Error state management:** A nullable error string (`string | null`) holds the
+ *   current error message. Setting it to `null` clears any previous error.
+ * - **window.location.assign vs router.push:** After login, a full page navigation is
+ *   used instead of Next.js router.push. This forces the browser to re-read cookies
+ *   and make a fresh server request — important because the session cookie was just set
+ *   and client-side navigation might not pick it up (especially on mobile Safari).
+ * - **try/catch/finally pattern:** `finally` runs whether the request succeeded or
+ *   failed, ensuring `setPending(false)` always executes (no stuck loading state).
+ * - **`credentials: "same-origin"`:** Tells fetch to include cookies in the request,
+ *   ensuring the server can set a session cookie in the response.
+ */
 "use client";
 
 import { useState } from "react";
 type Props = { nextPath: string };
 
 export function LoginForm({ nextPath }: Props) {
+  // Controlled inputs: React state is the "source of truth" for each field.
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  // `string | null` union: null = no error, string = error message to display.
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setError(null);
+    setError(null);  // clear previous errors on new submission
     setPending(true);
     try {
       const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        // `credentials: "same-origin"` ensures cookies are sent/received with this request.
         credentials: "same-origin",
         body: JSON.stringify({ email, password }),
       });
@@ -25,11 +46,14 @@ export function LoginForm({ nextPath }: Props) {
         setError(data.error ?? "Prijava nije uspjela.");
         return;
       }
-      /* Puna navigacija: na mobitelu (npr. Safari) sljedeći RSC zahtjev nakon fetch-a ponekad ne vidi novi kolačić. */
+      // window.location.assign() triggers a full page reload (not client-side navigation).
+      // This ensures the server sees the newly-set session cookie on the next request.
+      // router.push() would do a client-side transition that might miss the new cookie.
       window.location.assign(nextPath);
     } catch {
       setError("Mrežna greška. Pokušajte ponovno.");
     } finally {
+      // `finally` always runs — prevents the button from getting stuck in loading state.
       setPending(false);
     }
   }

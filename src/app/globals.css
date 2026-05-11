@@ -1,15 +1,38 @@
+/*
+ * src/app/globals.css — Global styles & design tokens
+ *
+ * KEY CONCEPTS:
+ * - Tailwind CSS v4 uses a CSS-first configuration model.
+ *   Instead of a tailwind.config.js, you import the framework and register
+ *   plugins directly in CSS with @import and @plugin directives.
+ * - CSS custom properties (variables) on :root act as "design tokens" —
+ *   a single source of truth for colours, shadows, spacing that every
+ *   component can reference via var(--token-name).
+ * - This file is imported in layout.tsx so it applies to the entire app.
+ */
+
+/* Tailwind v4: this single import brings in all utility classes.
+   No separate @tailwind base/components/utilities directives needed. */
 @import "tailwindcss";
+
+/* @plugin registers a Tailwind plugin using the new v4 CSS syntax.
+   @tailwindcss/typography adds the `prose` class for styling rich HTML
+   content (articles, blog posts) with sensible typographic defaults. */
 @plugin "@tailwindcss/typography";
 
+/* CSS custom properties (aka CSS variables) defined on :root are globally
+   accessible. Components reference them with var(--name), which makes
+   theme changes trivial — update the variable once, and every usage
+   picks up the new value automatically. */
 :root {
   /*
-   * Svijetla tema — ista bijela (#fff) kao podloga PNG loga;
-   * dubinski slojevi minimalno odvojeni ili bijeli + obrubi.
+   * Light theme — same white (#fff) as the PNG logo background;
+   * depth layers minimally separated or white + borders.
    */
   --background: #ffffff;
   --foreground: #0f172a;
   --surface: #ffffff;
-  /* Suptilan kontrast naspram --background — samo za „trake“ sekcija */
+  /* Subtle contrast against --background — only for section "stripes" */
   --surface-muted: #fafafa;
   --surface-deep: #f4f4f5;
   --muted: #64748b;
@@ -22,7 +45,7 @@
 
   --border-subtle: rgba(15, 23, 42, 0.1);
 
-  /* Kartice / header — diskretna dubina bez „teškog“ sivog */
+  /* Cards / header — subtle depth without "heavy" gray */
   --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.05);
   --shadow-card: 0 2px 8px -2px rgba(15, 23, 42, 0.06), 0 1px 2px -1px rgba(15, 23, 42, 0.04);
   --shadow-card-hover: 0 12px 28px -10px rgba(15, 23, 42, 0.12), 0 4px 8px -4px rgba(15, 23, 42, 0.06);
@@ -33,12 +56,18 @@ body {
   color: var(--foreground);
 }
 
+/* ::selection styles the highlighted text when a user selects content.
+   Using the accent colour at low opacity keeps the brand feel consistent. */
 ::selection {
   background: rgba(29, 78, 216, 0.14);
   color: var(--foreground);
 }
 
-/** Svijetli članci (About, Treneri, novosti) */
+/** Light articles (About, Coaches, news) */
+/* The prose class (from @tailwindcss/typography) accepts CSS-variable
+   overrides (--tw-prose-*) to customise body text, headings, link colours
+   etc. This .prose-site class is a project-specific preset applied
+   alongside `prose` to theme article content to match the site design. */
 .prose-site {
   --tw-prose-body: var(--muted);
   --tw-prose-headings: var(--foreground);

@@ -1,3 +1,18 @@
+/**
+ * src/app/galerija/[slug]/page.tsx — Single gallery album (route: /galerija/:slug)
+ *
+ * KEY CONCEPTS:
+ * - DYNAMIC ROUTE with [slug] — same pattern as /news/[slug].
+ * - `generateStaticParams` — tells Next.js which slug values exist at
+ *   BUILD time, so it can statically generate (SSG) a page for each album.
+ *   At build, Next.js calls this function, gets all slugs, then calls the
+ *   page component once per slug. The result is a set of static HTML files
+ *   that are served instantly — no server rendering at request time.
+ *   This is ideal for content that doesn't change on every request.
+ * - `generateMetadata` — dynamically sets <title>, description, and
+ *   og:image per album, using the same params as the page component.
+ * - `notFound()` — returns the 404 page if the slug doesn't match an album.
+ */
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
@@ -15,11 +30,17 @@ import { site } from "@/config/site";
 
 type Props = { params: Promise<{ slug: string }> };
 
+// generateStaticParams enables Static Site Generation (SSG) for dynamic
+// routes. Next.js calls this at build time and pre-renders a page for
+// each returned object. If a user visits a slug NOT in this list and
+// `dynamicParams` is true (default), Next.js renders on demand and caches it.
 export async function generateStaticParams() {
   const albums = await readGalleryAlbums();
   return albums.map((a) => ({ slug: a.slug }));
 }
 
+// Per-album metadata for SEO and social sharing — same concept as in
+// the news article page but applied to gallery albums.
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const albums = await readGalleryAlbums();

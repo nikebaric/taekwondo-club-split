@@ -1,3 +1,21 @@
+/**
+ * AdminGalleryFields — a sub-component for image upload and cover selection.
+ *
+ * KEY CONCEPTS:
+ * - **Sub-component for form composition:** This component is used inside both
+ *   AdminNewsForm and other form components. Breaking forms into sub-components
+ *   keeps each file manageable and allows reuse of the image upload UI.
+ * - **File input handling:** The `<input type="file">` element fires an `onChange`
+ *   event with `e.target.files` (a FileList). The component tracks how many files
+ *   were selected to update the cover picker options dynamically.
+ * - **Derived state with useMemo:** `initialCoverIdx` is computed from props and
+ *   cached. When props change (e.g., loading a different article), the memo updates.
+ * - **useEffect for syncing state to props:** Two useEffect calls keep `coverIdx`
+ *   in sync with changes to `initialCoverIdx` and `effectiveCount`. This is the
+ *   "derived state" pattern — state that depends on props needs explicit syncing.
+ * - **Conditional rendering of form controls:** The cover picker only shows when
+ *   there are 2+ images. With exactly 1 image, a hidden input sends the default.
+ */
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
@@ -10,11 +28,13 @@ export type AdminGalleryFieldsProps = {
 
 export function AdminGalleryFields({
   mode,
-  existingImageSrcs = [],
+  existingImageSrcs = [],  // Default parameter: empty array if not provided
   initialCoverSrc,
 }: AdminGalleryFieldsProps) {
+  // Tracks how many files the user selected in the file input.
   const [uploadCount, setUploadCount] = useState(0);
 
+  // useMemo: finds the index of the current cover image in the existing images array.
   const initialCoverIdx = useMemo(() => {
     if (existingImageSrcs.length === 0) return 0;
     if (!initialCoverSrc) return 0;
@@ -24,6 +44,9 @@ export function AdminGalleryFields({
 
   const [coverIdx, setCoverIdx] = useState(initialCoverIdx);
 
+  // Sync state to prop changes: when the article being edited changes,
+  // reset the cover index. This useEffect is necessary because useState's
+  // initial value only applies on first mount, not when props update.
   useEffect(() => {
     setCoverIdx(initialCoverIdx);
   }, [initialCoverIdx]);
@@ -62,6 +85,8 @@ export function AdminGalleryFields({
           accept="image/jpeg,image/png,image/webp,image/gif"
           multiple
           className="mt-2 block w-full text-sm text-[var(--muted)] file:mr-4 file:rounded-lg file:border-0 file:bg-slate-100 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-slate-800"
+          // e.target.files is a FileList (array-like). We track .length to know
+          // how many images the user selected, which updates the cover picker options.
           onChange={(e) => setUploadCount(e.target.files?.length ?? 0)}
         />
       </div>

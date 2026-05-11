@@ -1,3 +1,15 @@
+/**
+ * src/app/schedule/page.tsx — Schedule page (route: /schedule)
+ *
+ * KEY CONCEPTS:
+ * - RESPONSIVE DESIGN with Tailwind — this page shows the same data in
+ *   two different layouts: mobile-friendly CARDS and a desktop TABLE.
+ *   The `md:hidden` / `hidden md:block` classes toggle visibility at the
+ *   `md` breakpoint (768px). The markup for BOTH layouts is rendered
+ *   server-side; CSS alone controls which one is visible.
+ * - Data-driven rendering — the schedule slots come from a config object
+ *   and are rendered via .map(), keeping the template DRY.
+ */
 import type { Metadata } from "next";
 import { LocationMap } from "@/components/location-map";
 import { SectionHeading } from "@/components/section-heading";
@@ -62,6 +74,9 @@ export default function SchedulePage() {
       </div>
 
       <div className="mt-8">
+        {/* MOBILE layout (visible below md breakpoint, hidden on md+).
+            Each schedule slot is its own card — better touch targets and
+            readability on narrow screens than a cramped table. */}
         <div className="space-y-3 md:hidden">
           {site.scheduleSlots.map((r) => (
             <div
@@ -78,6 +93,10 @@ export default function SchedulePage() {
           ))}
         </div>
 
+        {/* DESKTOP layout (hidden below md, visible on md+).
+            A traditional <table> is ideal when horizontal space allows
+            columnar comparison. Both layouts render the same data from
+            site.scheduleSlots — only the presentation differs. */}
         <div className="hidden rounded-2xl border border-slate-200 bg-[var(--surface)] shadow-sm md:block">
           <table className="w-full table-fixed border-collapse text-left text-xs lg:text-sm">
             <thead className="border-b border-slate-200 bg-slate-50 text-[10px] uppercase tracking-wider text-slate-500 lg:text-xs">

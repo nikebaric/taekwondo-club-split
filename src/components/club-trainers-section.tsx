@@ -1,11 +1,27 @@
+/**
+ * ClubTrainersSection — displays the club's coaching staff.
+ *
+ * KEY CONCEPTS:
+ * - **Data-driven Server Component:** All content comes from the `site` config object.
+ *   The component doesn't fetch data or manage state — it maps config data to JSX.
+ *   To update coach info, you edit the config file, not this component.
+ * - **Config-based content pattern:** Coach bio, photos, names, and assistant coaches
+ *   are all stored in `@/config/site`. This separates content from presentation,
+ *   making it easy for non-developers to update information.
+ * - **Server Component (no "use client"):** Since there's no interactivity, this
+ *   renders entirely on the server. The coach photos are optimized via `<Image>`.
+ * - **Module-level constant:** `coachDisplayName` is computed once when the module
+ *   loads (not on every render). This is safe for values derived from static config.
+ */
 import Image from "next/image";
 import Link from "next/link";
 import { SectionHeading } from "@/components/section-heading";
 import { site } from "@/config/site";
 
+// Module-level computation: runs once at import time, not on every render.
 const coachDisplayName = `${site.headCoach.academicTitle} ${site.headCoach.name}`;
 
-/** Sadržaj bivše stranice /instructors — ugrađen u O klubu (#treneri). */
+/** Content from the former /instructors page — embedded in the About page (#trainers). */
 export function ClubTrainersSection() {
   const coach = site.headCoach;
 
@@ -55,6 +71,10 @@ export function ClubTrainersSection() {
             <p className="text-lg font-semibold text-slate-900">
               {coachDisplayName} — {coach.rank}, {coach.federation}
             </p>
+            {/* Rendering an array: .map() converts each bio paragraph string into
+                a <p> element. The `key={index}` prop helps React track which items
+                changed. Using index as key is acceptable here because the bio array
+                is static (never reordered or filtered). */}
             {coach.bio.map((paragraph, index) => (
               <p key={index} className="text-[var(--muted)] leading-relaxed">
                 {paragraph}

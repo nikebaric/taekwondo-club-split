@@ -1,3 +1,19 @@
+/**
+ * AdminCalendarEventForm — form for creating and editing calendar events.
+ *
+ * KEY CONCEPTS:
+ * - **Simple controlled form pattern:** A straightforward CRUD form with text inputs
+ *   and a date picker. Uses `defaultValue` (uncontrolled) for initial values and
+ *   FormData to read values on submit — a good pattern when you don't need
+ *   real-time validation or input masking.
+ * - **Same discriminated union pattern** as AdminAchievementForm: `Props` is a union
+ *   where mode "edit" guarantees the `initial` property exists.
+ * - **Optional field handling:** The `organizator` field is optional. On create,
+ *   it's simply omitted from the payload if empty. On edit, an empty string sends
+ *   `null` to the API to explicitly clear the value — a subtle but important distinction.
+ * - **router.push() + router.refresh():** Standard pattern for navigating after a
+ *   mutation and ensuring the destination page shows fresh server data.
+ */
 "use client";
 
 import { useRouter } from "next/navigation";

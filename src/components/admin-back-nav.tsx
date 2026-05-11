@@ -1,14 +1,30 @@
+/**
+ * AdminBackNav — a "Back" button that navigates to the previous page in browser history.
+ *
+ * KEY CONCEPTS:
+ * - **useRouter hook:** `next/navigation`'s useRouter provides programmatic navigation.
+ *   `router.back()` is equivalent to the browser's back button — it goes to the previous
+ *   entry in the history stack. Unlike `router.push("/some-path")`, it doesn't navigate
+ *   to a fixed URL.
+ * - **Client Component requirement:** useRouter is a React hook that needs browser APIs
+ *   (history stack), so "use client" is mandatory. Server Components can't use hooks.
+ * - **Nullish coalescing for defaults:** `className ?? "font-medium"` uses the provided
+ *   className if truthy, otherwise falls back to "font-medium". Different from `||`
+ *   because `??` only triggers on null/undefined (not empty string or 0).
+ */
 "use client";
 
 import { useRouter } from "next/navigation";
 
 type Props = {
-  /** Npr. font-semibold — inače font-medium */
+  /** E.g. font-semibold — defaults to font-medium. */
   className?: string;
 };
 
-/** Povratak u povijest preglednika (kao tipka „natrag”), ne fiksni URL. */
+/** Navigates back in browser history (like a "back" button), not a fixed URL. */
 export function AdminBackNav({ className }: Props) {
+  // useRouter() returns the Next.js router instance with methods like
+  // push(), back(), refresh(), replace(). Only available in Client Components.
   const router = useRouter();
   return (
     <button

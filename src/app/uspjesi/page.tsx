@@ -1,3 +1,14 @@
+/**
+ * src/app/uspjesi/page.tsx — Achievements page (route: /uspjesi)
+ *
+ * KEY CONCEPTS:
+ * - DATA LOADING PATTERN — this page combines two data sources:
+ *   1. Static config data (site.medalStats) available at build time
+ *   2. Async data from a store (readAchievements) loaded at request time
+ *   You can mix sync and async data freely in a Server Component.
+ * - The heavy lifting (rendering the achievements table) is delegated
+ *   to a dedicated <AchievementsTable> component — separation of concerns.
+ */
 import type { Metadata } from "next";
 import { AchievementsTable } from "@/components/achievements-table";
 import { SectionHeading } from "@/components/section-heading";
@@ -10,7 +21,9 @@ export const metadata: Metadata = {
 };
 
 export default async function UspjesiPage() {
+  // Destructuring from a static config — no await needed, available instantly
   const { gold, silver, bronze } = site.medalStats;
+  // Async data source — fetched on the server before HTML is sent
   const achievements = await readAchievements();
 
   return (

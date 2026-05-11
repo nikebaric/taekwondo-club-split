@@ -1,3 +1,18 @@
+/**
+ * Next.js Route Handler — PATCH & DELETE /api/calendar-events/[id]
+ *
+ * KEY CONCEPTS:
+ * - **Consistent CRUD Update/Delete pattern**: Compare this file with
+ *   `/api/achievements/[id]/route.ts` — the structure is nearly identical:
+ *   auth check → extract `id` from params → parse body → build `patch` object →
+ *   update store → revalidate. This consistency is intentional: when every resource
+ *   follows the same pattern, you can read (and write) new routes quickly.
+ * - **Partial<Omit<T, "id">>**: Same TypeScript pattern as achievements — `Omit`
+ *   excludes the `id` field (which shouldn't change), `Partial` makes everything
+ *   else optional for PATCH semantics.
+ * - **Clearing optional fields**: Sending `null` or `""` for `organizator` sets it
+ *   to `undefined`, effectively removing it from the record.
+ */
 import { revalidatePath } from "next/cache";
 import type { ClubCalendarEvent } from "@/config/club-calendar-events";
 import { isAdminSession } from "@/lib/auth-check";
@@ -38,6 +53,8 @@ export async function PATCH(req: Request, ctx: Params) {
   const b = body as Record<string, unknown>;
   const patch: Partial<Omit<ClubCalendarEvent, "id">> = {};
 
+  // Only include fields that were actually sent in the request body.
+  // This is the key difference between PATCH and PUT semantics.
   if (b.title !== undefined) {
     const title = String(b.title).trim();
     if (title.length < 1 || title.length > 300) {

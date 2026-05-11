@@ -1,9 +1,27 @@
+/**
+ * GalleryLightbox — a fullscreen overlay for viewing gallery images and videos.
+ *
+ * KEY CONCEPTS:
+ * - **useEffect for keyboard listeners:** Adds global keydown listeners (Escape,
+ *   Arrow keys) when the lightbox is open, and removes them on close. The cleanup
+ *   function (returned from useEffect) prevents memory leaks and stale listeners.
+ * - **useCallback for memoized handlers:** The `go` function is wrapped in useCallback
+ *   so its reference stays stable across re-renders. Without this, the useEffect that
+ *   depends on `go` would re-run every render, adding/removing listeners unnecessarily.
+ * - **Overlay/portal pattern:** The lightbox uses `fixed inset-0` to cover the entire
+ *   viewport. A semi-transparent backdrop with `bg-black/93` dims the content behind.
+ * - **event.stopPropagation():** On the prev/next buttons, stopPropagation prevents
+ *   the click from bubbling up to the backdrop's onClick (which would close the lightbox).
+ * - **Body scroll lock:** Setting `document.body.style.overflow = "hidden"` prevents
+ *   scrolling the page behind the lightbox — restored in the cleanup function.
+ */
 "use client";
 
 import Image from "next/image";
 import { useCallback, useEffect } from "react";
 import type { GalleryItem } from "@/config/gallery";
 
+// Renders different media types based on `item.kind` — a form of polymorphic rendering.
 export function LightboxSlide({ item }: { item: GalleryItem }) {
   if (item.kind === "image") {
     return (
@@ -64,6 +82,10 @@ export function GalleryLightbox({ open, onClose, items, index, onIndexChange }: 
   const current = len > 0 ? items[index] : null;
   const caption = current ? lightboxCaption(current) : null;
 
+  // useCallback memoizes this function — it only creates a new reference when
+  // `len`, `index`, or `onIndexChange` change. Without it, `go` would be a new
+  // function on every render, causing the useEffect below to re-run unnecessarily.
+  // The modular arithmetic `(index + delta + len) % len` creates circular navigation.
   const go = useCallback(
     (delta: number) => {
       if (len === 0) return;
@@ -72,6 +94,9 @@ export function GalleryLightbox({ open, onClose, items, index, onIndexChange }: 
     [len, index, onIndexChange],
   );
 
+  // Side effect: lock body scroll when lightbox opens.
+  // The cleanup function (return () => ...) restores scrolling when the lightbox
+  // closes or the component unmounts — this prevents scroll getting stuck.
   useEffect(() => {
     document.body.style.overflow = open ? "hidden" : "";
     return () => {
@@ -79,6 +104,9 @@ export function GalleryLightbox({ open, onClose, items, index, onIndexChange }: 
     };
   }, [open]);
 
+  // Keyboard navigation: this effect adds a global keydown listener.
+  // The dependency array [open, go, onClose] ensures the listener is re-attached
+  // when these values change. The cleanup removes the old listener first.
   useEffect(() => {
     if (!open) return;
     const onKeyDown = (e: KeyboardEvent) => {
@@ -126,6 +154,8 @@ export function GalleryLightbox({ open, onClose, items, index, onIndexChange }: 
 
           {len > 1 ? (
             <>
+              {/* e.stopPropagation() prevents the click from reaching the backdrop
+                  button behind this one, which would close the lightbox. */}
               <button
                 type="button"
                 onClick={(e) => {

@@ -1,3 +1,21 @@
+/**
+ * AchievementsTable — displays club achievements with interactive filtering.
+ *
+ * KEY CONCEPTS:
+ * - **Complex Client Component:** "use client" because it manages filter state
+ *   (medal, discipline, age group, belt) and re-renders when filters change.
+ * - **useState for filter state:** Each filter dimension has its own state variable.
+ *   Keeping them separate (vs. one object) means changing one filter doesn't
+ *   unnecessarily affect the others.
+ * - **useMemo for derived data:** `filtered` is computed from `rows` + filter states.
+ *   useMemo caches the result and only recomputes when its dependencies change.
+ *   Without it, the filter+sort would run on every render — wasteful for large datasets.
+ * - **Responsive layout (cards vs table):** Two layouts are rendered side-by-side:
+ *   cards (`md:hidden`) for mobile and a table (`hidden md:block`) for desktop.
+ *   Tailwind's responsive prefixes toggle visibility — no JavaScript needed for layout.
+ * - **TypeScript union types for filters:** `"all" | AchievementMedal` ensures filter
+ *   state can only hold valid values. The compiler catches typos at build time.
+ */
 "use client";
 
 import { useMemo, useState } from "react";
@@ -11,6 +29,7 @@ import {
   type ClubAchievement,
 } from "@/config/club-achievements";
 
+// Union types for filter state: "all" means no filter is applied.
 type MedalFilter = "all" | AchievementMedal;
 type AgeFilter = "all" | NonNullable<ClubAchievement["ageGroup"]>;
 type DisciplineFilter = "all" | AchievementDiscipline;
@@ -94,14 +113,20 @@ function AchievementRowCells({ row }: { row: ClubAchievement }) {
 }
 
 export function AchievementsTable({ rows }: { rows: ClubAchievement[] }) {
+  // Each filter gets its own useState — simpler than managing one big state object.
   const [medalFilter, setMedalFilter] = useState<MedalFilter>("all");
   const [disciplineFilter, setDisciplineFilter] = useState<DisciplineFilter>("all");
   const [ageFilter, setAgeFilter] = useState<AgeFilter>("all");
   const [beltFilter, setBeltFilter] = useState<BeltFilter>("all");
 
+  // useMemo caches these booleans — only recalculated when `rows` changes.
+  // Used to conditionally show/hide filter sections.
   const hasAgeGroups = useMemo(() => rows.some((r) => r.ageGroup), [rows]);
   const hasBelts = useMemo(() => rows.some((r) => r.pojas), [rows]);
 
+  // useMemo for derived data: filters and sorts the rows array.
+  // The dependency array includes all filter states — React recomputes only when
+  // one of these changes, not on every render. This is a performance optimization.
   const filtered = useMemo(() => {
     let r = rows.filter((row) => {
       if (medalFilter !== "all" && row.medal !== medalFilter) return false;
@@ -230,7 +255,7 @@ export function AchievementsTable({ rows }: { rows: ClubAchievement[] }) {
         ) : null}
       </div>
 
-      {/* Kartice: sav sadržaj bez horizontalnog scrolla na uskim ekranima */}
+      {/* Cards: all content without horizontal scroll on narrow screens */}
       <div className="space-y-3 md:hidden">
         {filtered.length === 0 ? (
           <div className="rounded-2xl border border-slate-200 bg-[var(--surface)] px-4 py-10 text-center text-sm text-[var(--muted)] shadow-sm">
@@ -279,7 +304,7 @@ export function AchievementsTable({ rows }: { rows: ClubAchievement[] }) {
         )}
       </div>
 
-      {/* Tablica: puni širinu kontejnera, bez min-width i overflow-x */}
+      {/* Table: fills the container width, no min-width or overflow-x */}
       <div className="hidden rounded-2xl border border-slate-200 bg-[var(--surface)] shadow-sm md:block">
         <table className="w-full table-fixed border-collapse text-left text-xs lg:text-sm">
           <thead className="border-b border-slate-200 bg-slate-50 text-[10px] uppercase tracking-wider text-slate-500 lg:text-xs">

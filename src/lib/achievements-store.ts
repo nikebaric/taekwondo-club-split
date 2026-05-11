@@ -1,3 +1,17 @@
+/**
+ * CONCEPT: Generic Store Pattern Reuse
+ *
+ * This follows the same JSON-file store pattern as news-store.ts and
+ * gallery-store.ts. The consistency across all stores means:
+ * - New developers learn the pattern once, apply it everywhere
+ * - Bugs fixed in one store suggest fixes in others
+ * - All data is in `data/*.json` — easy to back up or version control
+ *
+ * Additional pattern: `Partial<Omit<T, "id">>` in updateAchievementById —
+ * `Omit` removes the `id` field (shouldn't be changed), `Partial` makes all
+ * remaining fields optional (only patch what you send).
+ */
+
 import { mkdir, readFile, writeFile } from "fs/promises";
 import { join } from "path";
 import type { ClubAchievement } from "@/config/club-achievements";
@@ -35,6 +49,10 @@ export async function appendAchievement(row: ClubAchievement): Promise<void> {
   await writeAchievements(rows);
 }
 
+// CONCEPT: `Partial<Omit<ClubAchievement, "id">>` is a composed utility type:
+// - `Omit<T, "id">` creates a type like T but without the `id` field
+// - `Partial<T>` makes all properties optional (adds `?` to each)
+// Result: you can pass any subset of fields to update, but never change the id.
 export async function updateAchievementById(
   id: string,
   patch: Partial<Omit<ClubAchievement, "id">>,

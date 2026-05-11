@@ -1,3 +1,23 @@
+/**
+ * AdminNewsForm — a complex form for creating and editing news articles.
+ *
+ * KEY CONCEPTS:
+ * - **Complex form with file uploads:** Uses the native FormData API to collect all
+ *   form data (text fields + file inputs) into a single object. FormData is sent
+ *   directly via fetch (not as JSON) because file uploads require multipart encoding.
+ * - **Multiple state variables:** `pending` tracks submission state, `error` holds
+ *   error messages. Using separate `useState` calls (vs. one object) is simpler when
+ *   states are updated independently.
+ * - **useRef for form element access:** The PublishedDatePicker sub-component uses
+ *   `useRef<HTMLInputElement>` to imperatively set the date input's value after mount.
+ *   This avoids hydration mismatches between server and client.
+ * - **mode prop pattern ("create" | "edit"):** A single component handles both
+ *   creating and editing articles. The `mode` prop determines which API endpoint
+ *   to call (POST vs PATCH) and which UI to show (different labels, delete button).
+ * - **router.push() + router.refresh():** After saving, `push()` navigates to the
+ *   article page, and `refresh()` forces Next.js to re-fetch server data so the
+ *   new content appears immediately (not stale cached data).
+ */
 "use client";
 
 import { useRouter } from "next/navigation";
@@ -16,7 +36,7 @@ export type AdminNewsFormProps = {
   hasYoutube?: boolean;
   existingImageSrcs?: string[];
   initialCoverSrc?: string | null;
-  /** ISO datum (iz JSON-a) za predpunjeno polje datuma; za novu objavu trenutni dan. */
+  /** ISO date (from JSON) for the pre-filled date field; for a new post defaults to today. */
   initialPublishedAtIso: string;
 };
 
@@ -71,13 +91,19 @@ export function AdminNewsForm({
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Form submission handler: collects all fields (text + files) via FormData.
+  // Unlike JSON.stringify, FormData supports file uploads natively.
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError(null);
     const form = e.currentTarget;
+    // `new FormData(form)` reads ALL inputs by their `name` attribute — including files.
+    // This is sent as multipart/form-data (the browser sets the Content-Type automatically).
     const fd = new FormData(form);
     setPending(true);
     try {
+      // form.elements.namedItem() accesses a specific input by name — a DOM API.
+      // Type assertion `as HTMLInputElement | null` tells TypeScript what we expect.
       const pubEl = form.elements.namedItem("publishedDate") as HTMLInputElement | null;
       if (!pubEl?.value?.trim()) {
         setError("Odaberite datum objave.");
@@ -85,6 +111,8 @@ export function AdminNewsForm({
         return;
       }
 
+      // Mode determines the HTTP method and URL:
+      // Create → POST /api/news, Edit → PATCH /api/news/:slug
       const isEdit = mode === "edit" && editSlug;
       const url = isEdit ? `/api/news/${encodeURIComponent(editSlug)}` : "/api/news";
       const method = isEdit ? "PATCH" : "POST";
@@ -101,6 +129,9 @@ export function AdminNewsForm({
       if (!isEdit) {
         form.reset();
       }
+      // router.push() does client-side navigation to the new article.
+      // router.refresh() tells Next.js to re-fetch all Server Component data on the
+      // current (and navigated-to) page, ensuring fresh content from the server.
       router.push(`/news/${data.slug}`);
       router.refresh();
     } catch {

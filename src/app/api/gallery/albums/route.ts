@@ -1,3 +1,21 @@
+/**
+ * Next.js Route Handler — POST /api/gallery/albums
+ *
+ * KEY CONCEPTS:
+ * - **Complex file upload handling**: This route accepts images, videos, AND YouTube
+ *   URLs all in a single FormData submission. Each media type has its own validation
+ *   rules (allowed MIME types, max size, max count).
+ * - **Discriminated union items**: Gallery items use a `kind` field ("image",
+ *   "videoFile", "youtube") to distinguish between types. This TypeScript pattern
+ *   (discriminated unions) lets the compiler know exactly which properties exist on
+ *   each variant when you check `item.kind`.
+ * - **Slug from user input or title**: The user can optionally provide a custom slug;
+ *   if not, one is generated from the title. Either way, `uniqueGallerySlug` ensures
+ *   no collision with existing albums.
+ * - **Bulk operations**: Multiple files are processed in a loop, each getting a UUID
+ *   filename for uniqueness. The entire album (with all its items) is persisted as a
+ *   single JSON record in one atomic append operation.
+ */
 import { mkdir, writeFile } from "fs/promises";
 import { join } from "path";
 import { randomUUID } from "crypto";
@@ -26,6 +44,11 @@ function safeBaseName(name: string): string {
   return base.length > 0 ? base : "datoteka";
 }
 
+/**
+ * Parse YouTube URLs from a multi-line text field. Each line can optionally include
+ * a title after a pipe character: "https://youtu.be/xyz|My Video Title".
+ * Returns a typed array of `GalleryYouTube` items (discriminated union with kind: "youtube").
+ */
 function parseYoutubeLines(raw: string): { items: GalleryYouTube[]; error?: string } {
   const lines = raw
     .split(/\r?\n/)
@@ -53,6 +76,8 @@ function parseYoutubeLines(raw: string): { items: GalleryYouTube[]; error?: stri
 }
 
 export async function POST(request: Request) {
+  // Gallery has its own permission check — separate from the general admin check,
+  // because a gallery-only editor might not have full admin access
   if (!(await isGalleryAdminSession())) {
     return Response.json({ ok: false, error: "Nemate ovlasti za uređivanje galerije." }, { status: 403 });
   }
@@ -81,6 +106,8 @@ export async function POST(request: Request) {
     return Response.json({ ok: false, error: ytParsed.error }, { status: 400 });
   }
 
+  // `form.getAll("images")` returns all files submitted under the "images" field name.
+  // The type predicate filter `(x): x is File` narrows `FormDataEntryValue` to `File`.
   const imageFields = form.getAll("images");
   const videoFields = form.getAll("videos");
   const imageFiles = imageFields.filter((x): x is File => x instanceof File && x.size > 0);
@@ -114,6 +141,7 @@ export async function POST(request: Request) {
     }
   }
 
+  // Generate a unique slug — prefer user-provided slug, fall back to title-based
   const existing = await readGalleryAlbums();
   const baseSlug = slugInput.length > 0 ? slugify(slugInput) : slugify(title);
   const slug = uniqueGallerySlug(baseSlug.length > 0 ? baseSlug : "album", existing);
@@ -121,6 +149,9 @@ export async function POST(request: Request) {
   const uploadDir = join(process.cwd(), "public", "uploads", "gallery");
   await mkdir(uploadDir, { recursive: true });
 
+  // Build a heterogeneous array of gallery items (images, videos, YouTube embeds).
+  // TypeScript's `GalleryItem[]` is a union type — each element can be any of the
+  // three kinds, distinguished by the `kind` property.
   const items: GalleryItem[] = [];
 
   let imgIdx = 0;
@@ -139,6 +170,7 @@ export async function POST(request: Request) {
     await writeFile(join(uploadDir, fileName), buf);
     const src = `/uploads/gallery/${fileName}`;
     const altBase = safeBaseName(imageFile.name.replace(/\.[^.]+$/, ""));
+    // Each item is typed with `kind: "image"` — this is the discriminant field
     const img: GalleryImage = {
       kind: "image",
       src,
@@ -162,8 +194,10 @@ export async function POST(request: Request) {
     items.push(vf);
   }
 
+  // YouTube items (kind: "youtube") are added after local files
   items.push(...ytParsed.items);
 
+  // An album with zero items is not useful — require at least one media item
   if (items.length === 0) {
     return Response.json(
       { ok: false, error: "Dodajte barem jednu sliku, video datoteku ili YouTube poveznicu." },

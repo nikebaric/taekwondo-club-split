@@ -1,3 +1,19 @@
+/**
+ * CookieConsent — a dismissable banner for cookie/privacy consent.
+ *
+ * KEY CONCEPTS:
+ * - **Client Component ("use client"):** Required because this component uses
+ *   browser-only APIs (localStorage) and React hooks (useState, useEffect).
+ * - **useEffect for side effects:** The effect runs once after the first render
+ *   (empty dependency array `[]`) to check localStorage. This avoids a hydration
+ *   mismatch — the server can't access localStorage, so we start with `visible=false`
+ *   and only show the banner after the client-side check.
+ * - **Conditional rendering with early return:** `if (!visible) return null;`
+ *   short-circuits the component — React renders nothing. This is cleaner than
+ *   wrapping the entire JSX in a conditional.
+ * - **localStorage for persistence:** A simple key-value store in the browser.
+ *   Once the user accepts, we store a flag so the banner never reappears.
+ */
 "use client";
 
 import { useEffect, useState } from "react";
@@ -5,8 +21,12 @@ import { useEffect, useState } from "react";
 const STORAGE_KEY = "cookie-consent-accepted";
 
 export function CookieConsent() {
+  // Start hidden to match server-rendered HTML (server doesn't know localStorage).
   const [visible, setVisible] = useState(false);
 
+  // useEffect runs AFTER the component mounts in the browser.
+  // The empty dependency array [] means "run once on mount, never re-run."
+  // This is the right place for browser-only APIs like localStorage.
   useEffect(() => {
     if (!localStorage.getItem(STORAGE_KEY)) {
       setVisible(true);
@@ -18,6 +38,8 @@ export function CookieConsent() {
     setVisible(false);
   }
 
+  // Early return pattern: if not visible, render nothing (null).
+  // React treats null as "don't render any DOM element."
   if (!visible) return null;
 
   return (

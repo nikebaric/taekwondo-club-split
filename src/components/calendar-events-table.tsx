@@ -1,3 +1,19 @@
+/**
+ * CalendarEventsTable — displays competition/seminar events in a responsive layout.
+ *
+ * KEY CONCEPTS:
+ * - **Responsive data display pattern:** The same data is rendered in two different
+ *   layouts — cards on mobile (`md:hidden`) and a table on desktop (`hidden md:block`).
+ *   Both are always in the DOM; Tailwind CSS toggles visibility. This avoids
+ *   JavaScript-based responsive logic and works with SSR (server-rendered HTML).
+ * - **Server Component:** No "use client" — no interactivity needed. The sorting
+ *   happens during server rendering, and the result is sent as static HTML.
+ * - **Immutable sort pattern:** `[...rows].sort()` creates a copy before sorting.
+ *   This avoids mutating the original `rows` array (which is `readonly`).
+ * - **Fragment (<>):** The component returns two sibling elements (cards + table).
+ *   React requires a single root, so `<>...</>` (Fragment) wraps them without
+ *   adding an extra DOM node.
+ */
 import type { ClubCalendarEvent } from "@/config/club-calendar-events";
 
 function formatDisplayDate(iso: string): string {
@@ -6,8 +22,9 @@ function formatDisplayDate(iso: string): string {
   return d.toLocaleDateString("hr-HR", { day: "2-digit", month: "2-digit", year: "numeric" });
 }
 
-/** Natjecanja i seminari — bez horizontalnog scrolla na mobitelu (kartice), tablica od md. */
+/** Competitions and seminars — no horizontal scroll on mobile (cards), table from md breakpoint. */
 export function CalendarEventsTable({ rows }: { rows: readonly ClubCalendarEvent[] }) {
+  // Spread into a new array before sorting — `rows` is readonly, and .sort() mutates in place.
   const sorted = [...rows].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
   return (

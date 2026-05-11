@@ -1,3 +1,17 @@
+/**
+ * src/app/about/page.tsx — About page (route: /about)
+ *
+ * KEY CONCEPTS:
+ * - This is a STATIC page — it has no async data fetching, so Next.js can
+ *   pre-render it at build time (Static Site Generation / SSG).
+ * - The `metadata` export provides page-specific SEO tags. Because the
+ *   root layout defines `title.template: "%s | Club Name"`, exporting
+ *   `title: "O klubu"` here results in the final <title> being
+ *   "O klubu | Club Name" — the framework handles merging automatically.
+ * - Server Components can import and render other components (both Server
+ *   and Client). The `ClubTrainersSection` below may be a Client Component
+ *   internally, but this page itself stays a Server Component.
+ */
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
@@ -5,11 +19,16 @@ import { ClubTrainersSection } from "@/components/club-trainers-section";
 import { SectionHeading } from "@/components/section-heading";
 import { contactPageLabel, site } from "@/config/site";
 
+// Exporting a `metadata` object is how you set page-level <head> tags in
+// the App Router. This replaces the old `<Head>` component from pages/.
+// Next.js deep-merges this with the parent layout's metadata.
 export const metadata: Metadata = {
   title: "O klubu",
-  description: `${site.name} — ITF taekwon-do, trening u Splitu (OS „BRDA“). ${site.description}`,
+  description: `${site.name} — ITF taekwon-do, trening u Splitu (OS „BRDA"). ${site.description}`,
 };
 
+// A synchronous (non-async) Server Component — no data to fetch, so
+// Next.js statically generates this page at build time by default.
 export default function AboutPage() {
   return (
     <>
@@ -31,6 +50,9 @@ export default function AboutPage() {
           />
           <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
         </div>
+        {/* The `prose` class comes from @tailwindcss/typography and styles
+            raw HTML / rich text content with sensible typographic defaults.
+            `prose-site` layers on project-specific colour overrides. */}
         <div className="prose prose-site prose-lg max-w-none prose-headings:text-slate-900">
           <p>{site.taekwondoMeaningShort}</p>
           <p>
@@ -70,6 +92,9 @@ export default function AboutPage() {
       </div>
     </div>
 
+    {/* id="treneri" creates an anchor target for in-page hash links (#treneri).
+        scroll-mt-24 adds scroll-margin so the section isn't hidden behind
+        a sticky header when the browser scrolls to this anchor. */}
     <section id="treneri" className="scroll-mt-24 border-t border-slate-200/80">
       <ClubTrainersSection />
     </section>

@@ -1,3 +1,16 @@
+/**
+ * CONCEPT: Fallback/Migration Pattern (Structured Data vs Legacy HTML)
+ *
+ * When an app evolves, older data may be stored in a different format.
+ * This function handles both:
+ * 1. NEW posts: media stored in structured JSON fields (galleryImageSrcs, etc.)
+ * 2. OLD posts: media embedded as HTML tags in bodyHtml (legacy format)
+ * 3. OLDEST posts: single image/video in flat fields (imageSrc, videoSrc)
+ *
+ * The resolution order (structured → legacy HTML → flat fields) is a common
+ * migration pattern — it lets you support old data without a database migration.
+ */
+
 import type { LocalNewsPost } from "@/lib/local-news-types";
 import { parseLegacyMediaFromBodyHtml } from "@/lib/news-legacy-media";
 
@@ -7,8 +20,9 @@ export type ResolvedArticleGallery = {
   videos: { src: string; mime: string }[];
 };
 
-/** Strukturirana polja ili fallback iz starog HTML-a. */
+/** Structured fields or fallback from legacy HTML. */
 export function resolveArticleGallery(post: LocalNewsPost): ResolvedArticleGallery {
+  // Priority 1: Check if the post uses the new structured gallery fields
   const hasStructured =
     (post.galleryImageSrcs && post.galleryImageSrcs.length > 0) ||
     (post.galleryYoutubeEmbeds && post.galleryYoutubeEmbeds.length > 0) ||
@@ -26,6 +40,7 @@ export function resolveArticleGallery(post: LocalNewsPost): ResolvedArticleGalle
     };
   }
 
+  // Priority 2: Parse media from legacy HTML (older posts stored media inline)
   const legacy = parseLegacyMediaFromBodyHtml(post.bodyHtml);
   if (
     legacy.images.length > 0 ||
@@ -35,6 +50,7 @@ export function resolveArticleGallery(post: LocalNewsPost): ResolvedArticleGalle
     return legacy;
   }
 
+  // Priority 3: Fall back to the oldest single-field format
   const imgs: string[] = [];
   if (post.imageSrc) imgs.push(post.imageSrc);
   const vids: { src: string; mime: string }[] = [];

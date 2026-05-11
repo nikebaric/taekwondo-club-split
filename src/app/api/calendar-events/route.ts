@@ -1,3 +1,18 @@
+/**
+ * Next.js Route Handler — POST /api/calendar-events
+ *
+ * KEY CONCEPTS:
+ * - **Consistent CRUD pattern**: This route follows the exact same structure as
+ *   `/api/achievements` — auth check → parse JSON → validate → generate UUID →
+ *   append to store → revalidate cache. Maintaining consistency across API routes
+ *   makes the codebase predictable and easier for new developers to navigate.
+ * - **Single-responsibility route file**: This file only handles POST (Create).
+ *   The companion `[id]/route.ts` handles PATCH (Update) and DELETE (Remove).
+ *   Splitting by dynamic vs. non-dynamic keeps each file focused.
+ * - **Conditional object spread**: `...(organizator ? { organizator } : {})` only
+ *   includes the field when it has a value. This keeps the stored JSON clean — no
+ *   null or undefined fields cluttering the data.
+ */
 import { randomUUID } from "crypto";
 import { revalidatePath } from "next/cache";
 import { isAdminSession } from "@/lib/auth-check";
@@ -17,6 +32,7 @@ export async function POST(req: Request) {
     return Response.json({ ok: false, error: "Niste prijavljeni." }, { status: 401 });
   }
 
+  // Standard JSON body parsing — same defensive pattern used across all CRUD routes
   let body: unknown;
   try {
     body = await req.json();

@@ -1,4 +1,4 @@
-/** Službeni „f” simbol Facebooka (Meta brand). */
+/** Official Facebook "f" symbol (Meta brand). */
 export function FacebookLogo({ className }: { className?: string }) {
   return (
     <svg

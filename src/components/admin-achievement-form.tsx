@@ -1,3 +1,20 @@
+/**
+ * AdminAchievementForm — form for creating and editing achievement records.
+ *
+ * KEY CONCEPTS:
+ * - **Controlled form with select elements:** Uses `<select>` for enum fields (medal,
+ *   discipline, age group, belt). `defaultValue` pre-fills the initial value without
+ *   requiring onChange handlers — these are "uncontrolled" selects with defaults.
+ * - **TypeScript discriminated union for props:** The `Props` type is a union of two
+ *   shapes: `{ mode: "create" }` and `{ mode: "edit"; initial: ClubAchievement }`.
+ *   When `mode === "edit"`, TypeScript knows `initial` exists. When `mode === "create"`,
+ *   accessing `initial` would be a compile error. This ensures type safety at the call site.
+ * - **Type assertions with `as`:** `String(fd.get("medal")) as AchievementMedal`
+ *   tells TypeScript to trust that the form value matches the expected type.
+ *   This is necessary because FormData always returns strings, not typed values.
+ * - **`type` keyword in imports:** `import type { ... }` imports types only — they're
+ *   stripped at compile time and don't increase the JavaScript bundle size.
+ */
 "use client";
 
 import { useRouter } from "next/navigation";
@@ -14,6 +31,8 @@ import { ACHIEVEMENT_BELTS, pojasLabel } from "@/config/club-achievements";
 const inputClass =
   "w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]";
 
+// Discriminated union: TypeScript uses the `mode` field to narrow the type.
+// When mode is "edit", `initial` is guaranteed to exist.
 type Props =
   | { mode: "create" }
   | { mode: "edit"; initial: ClubAchievement };
@@ -23,6 +42,8 @@ export function AdminAchievementForm(props: Props) {
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
+  // Type narrowing: checking `props.mode` tells TypeScript which variant we have.
+  // After this, `initial` is `ClubAchievement | null` — safe to access in the JSX.
   const initial = props.mode === "edit" ? props.initial : null;
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {

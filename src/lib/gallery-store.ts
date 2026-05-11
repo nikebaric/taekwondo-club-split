@@ -1,3 +1,19 @@
+/**
+ * CONCEPT: Same JSON Store Pattern as News — DRY Principles
+ *
+ * This file follows the exact same read/write/CRUD pattern as `news-store.ts`
+ * but for gallery albums. Notice the structural similarity:
+ * - Same file path resolution (`join(process.cwd(), "data", ...)`)
+ * - Same `ensureDataDir` helper
+ * - Same defensive parsing (`as unknown` → validate → cast)
+ * - Same CRUD operations (read, write, find, replace, append, delete)
+ *
+ * DRY (Don't Repeat Yourself) principle: The pattern is repeated here because
+ * each store manages a different data type. A more advanced approach would be
+ * a generic `createJsonStore<T>()` factory — but explicit stores are simpler
+ * to understand and debug for a learning project.
+ */
+
 import { mkdir, readFile, writeFile } from "fs/promises";
 import { join } from "path";
 import type { GalleryAlbum } from "@/config/gallery";
@@ -44,7 +60,7 @@ export async function appendGalleryAlbum(album: GalleryAlbum): Promise<void> {
   await writeGalleryAlbums(albums);
 }
 
-/** Ukloni album; vraća uklonjeni zapis ako postoji. */
+/** Remove an album; returns the removed record if it exists. */
 export async function deleteGalleryAlbumBySlug(slug: string): Promise<GalleryAlbum | null> {
   const albums = await readGalleryAlbums();
   const idx = albums.findIndex((a) => a.slug === slug);

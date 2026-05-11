@@ -1,3 +1,17 @@
+/**
+ * src/app/news/page.tsx — News listing page (route: /news)
+ *
+ * KEY CONCEPTS:
+ * - SERVER-SIDE DATA FETCHING — this is an async Server Component that
+ *   awaits data before rendering. The `await` runs on the server; the
+ *   client receives fully rendered HTML with the posts already embedded.
+ *   No useEffect, no loading state, no client-side fetch waterfall.
+ * - DYNAMIC CONTENT — because the function is async, Next.js treats this
+ *   page as dynamically rendered (not statically generated at build time).
+ *   Each request fetches the latest posts from the data store.
+ * - Conditional rendering (`posts.length === 0 ? ... : ...`) shows an
+ *   empty-state message or the grid — a common React pattern.
+ */
 import type { Metadata } from "next";
 import Link from "next/link";
 import { SectionHeading } from "@/components/section-heading";
@@ -11,6 +25,9 @@ export const metadata: Metadata = {
   description: `${newsPortalCopy.metaDescription} ${site.name}.`,
 };
 
+// async function → this page fetches data on every request (dynamic rendering).
+// The `24` argument limits how many posts to fetch — pagination/infinite
+// scroll could be layered on top with searchParams or a Client Component.
 export default async function NewsPage() {
   const posts = await fetchNewsPosts(24);
 

@@ -1,3 +1,15 @@
+/**
+ * src/app/programs/page.tsx — Programs page (route: /programs)
+ *
+ * KEY CONCEPTS:
+ * - REUSABLE COMPONENT COMPOSITION — instead of writing bespoke JSX for
+ *   each program card, the page stores program data in an array and
+ *   renders it with .map(). Adding a new program is just a new array entry.
+ * - This page uses `<SectionHeading>`, `<Image>`, and `<Link>` — all
+ *   reusable building blocks. This "composition over inheritance" approach
+ *   is a core React pattern.
+ * - Static page with no data fetching — fully SSG-able at build time.
+ */
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
@@ -10,6 +22,8 @@ export const metadata: Metadata = {
   description: `Programi za djecu i odrasle — ${site.styleLine} ${site.name}.`,
 };
 
+// Data array pattern — define content as typed data, render with .map().
+// This separates content from presentation and keeps the JSX template clean.
 const programs = [
   {
     name: "Djeca i juniori",
@@ -52,6 +66,9 @@ export default function ProgramsPage() {
           title="Djeca i odrasli"
           subtitle={`${site.styleLine} Treningi prema rasporedu u dvorani ${site.address.venueName}.`}
         />
+        {/* Component composition in action: each <li> combines Image, text,
+            and layout — all from reusable primitives. The parent only decides
+            WHAT to render; each child component owns HOW to render. */}
         <ul className="mx-auto mt-14 max-w-4xl space-y-6">
           {programs.map((p) => (
             <li

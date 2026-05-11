@@ -1,8 +1,22 @@
+/**
+ * CONCEPT: Mapper Pattern — Data Layer → UI Shape
+ *
+ * Components expect data in a specific format (NewsPost), but the database
+ * stores data differently (LocalNewsPost). This mapper bridges the gap:
+ *   LocalNewsPost (storage format) → NewsPost (display format)
+ *
+ * Benefits:
+ * - Components don't know about storage implementation details
+ * - Storage format can evolve independently of UI components
+ * - Single place to add derived/computed fields (like articleCreditLine)
+ * - Mirrors the "DTO" (Data Transfer Object) pattern in backend development
+ */
+
 import { resolveArticleCreditLine } from "@/lib/article-credit";
 import type { LocalNewsPost } from "@/lib/local-news-types";
 import type { NewsPost } from "@/lib/news-post";
 
-/** Mapira zapis iz `data/news-posts.json` u oblik za prikaz komponenti. */
+/** Maps a record from `data/news-posts.json` to the shape used by display components. */
 export function localPostToNewsShape(p: LocalNewsPost): NewsPost {
   const excerptHtml = `<p>${escapeForWp(p.excerptPlain.slice(0, 400))}</p>`;
   const imgs = p.galleryImageSrcs?.length ? p.galleryImageSrcs : p.imageSrc ? [p.imageSrc] : [];
@@ -33,6 +47,8 @@ export function localPostToNewsShape(p: LocalNewsPost): NewsPost {
   };
 }
 
+// Private helper (not exported) — minimal HTML escaping for safe insertion
+// into the WordPress-like rendered HTML structure.
 function escapeForWp(text: string): string {
   return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;");
 }

@@ -1,3 +1,16 @@
+/**
+ * CONCEPT: Consistent Data Store — Same Pattern, Different Entity
+ *
+ * This module is structurally identical to achievements-store.ts, gallery-store.ts,
+ * and news-store.ts. The consistency is intentional:
+ * - Predictable API: `read`, `write`, `find`, `append`, `update`, `delete`
+ * - Same error handling strategy (return empty/null on failure)
+ * - Same file structure (JSON array in `data/` directory)
+ *
+ * This predictability is a hallmark of well-architected code — even without
+ * a shared generic base, the consistent shape makes the codebase navigable.
+ */
+
 import { mkdir, readFile, writeFile } from "fs/promises";
 import { join } from "path";
 import type { ClubCalendarEvent } from "@/config/club-calendar-events";

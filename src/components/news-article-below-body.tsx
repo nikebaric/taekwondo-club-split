@@ -1,3 +1,21 @@
+/**
+ * NewsArticleBelowBody — renders media (images, YouTube, videos) below an article.
+ *
+ * KEY CONCEPTS:
+ * - **Server Component composing media elements:** This component takes raw data
+ *   (image URLs, embed URLs, video sources) and renders them as a media gallery
+ *   below the article text. It composes GalleryAlbumStack (interactive, Client
+ *   Component) with static YouTube iframes and video elements.
+ * - **`as const` assertion:** `kind: "image" as const` narrows the string type from
+ *   `string` to the literal `"image"`. This is necessary because GalleryItem is a
+ *   discriminated union — TypeScript needs to know the exact `kind` value to ensure
+ *   the object matches the correct variant.
+ * - **Early return for empty state:** `if (!hasAny) return null;` avoids rendering
+ *   an empty <section> with unnecessary borders when there's no media.
+ * - **Composition pattern:** This component delegates image rendering to
+ *   GalleryAlbumStack (which has lightbox functionality) while handling YouTube
+ *   and video elements directly.
+ */
 "use client";
 
 import type { GalleryItem } from "@/config/gallery";
@@ -11,6 +29,9 @@ type Props = {
 };
 
 export function NewsArticleBelowBody({ images, youtubeEmbeds, videos, altBase }: Props) {
+  // Transform raw image URLs into GalleryItem objects.
+  // `as const` on "image" narrows the type from string to the literal "image",
+  // which satisfies the discriminated union type GalleryItem.
   const imageItems: GalleryItem[] = images.map((src) => ({
     kind: "image" as const,
     src,

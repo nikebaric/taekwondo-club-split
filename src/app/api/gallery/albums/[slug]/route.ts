@@ -1,3 +1,19 @@
+/**
+ * Next.js Route Handler — PATCH & DELETE /api/gallery/albums/[slug]
+ *
+ * KEY CONCEPTS:
+ * - **Complex update with mixed operations**: The PATCH handler simultaneously handles
+ *   removing specific items by index, uploading new files, and adding YouTube links —
+ *   all in a single request. This is more complex than simple JSON PATCH because it
+ *   combines FormData (for files) with structured metadata.
+ * - **Index-based item removal**: The client sends `remove_indices` (e.g., "0,3,5") to
+ *   indicate which items to delete. The server filters them out and also deletes the
+ *   associated files from disk — only if they're managed uploads (not external URLs).
+ * - **Slug collision avoidance on update**: When the user changes the album slug, we
+ *   must check against other albums (excluding the current one) to avoid duplicates.
+ * - **Cleanup on DELETE**: When deleting an entire album, all associated uploaded files
+ *   (images and videos) are removed from disk to prevent orphaned files.
+ */
 import { mkdir, unlink, writeFile } from "fs/promises";
 import { join } from "path";
 import { randomUUID } from "crypto";
@@ -65,6 +81,11 @@ function parseYoutubeLines(raw: string): { items: GalleryYouTube[]; error?: stri
   return { items };
 }
 
+/**
+ * Parse a comma/semicolon/whitespace-separated string of indices into a Set<number>.
+ * Used for the `remove_indices` field — e.g., "0,3,5" → Set{0, 3, 5}.
+ * Using a Set gives O(1) lookup when filtering items.
+ */
 function parseRemoveIndices(raw: string): Set<number> {
   const set = new Set<number>();
   for (const part of raw.split(/[,;\s]+/).filter(Boolean)) {
@@ -148,9 +169,12 @@ export async function PATCH(request: Request, ctx: RouteCtx) {
 
   const removeSet = parseRemoveIndices(removeRaw);
 
+  // Start with the existing items, then filter out removed ones
   let items: GalleryItem[] = [...existing.items];
   const removedForUnlink: GalleryItem[] = [];
 
+  // Filter by index: items at indices in `removeSet` are collected for file deletion,
+  // while the rest are kept
   if (removeSet.size > 0) {
     const next: GalleryItem[] = [];
     items.forEach((item, idx) => {
@@ -163,6 +187,9 @@ export async function PATCH(request: Request, ctx: RouteCtx) {
     items = next;
   }
 
+  // Delete files from disk, but only for managed uploads (files we uploaded, not
+  // external URLs or pre-seeded static assets). This safety check prevents
+  // accidental deletion of files that belong to the codebase.
   for (const item of removedForUnlink) {
     if (item.kind === "image" || item.kind === "videoFile") {
       if (isGalleryManagedUpload(item.src)) await unlinkPublicUpload(item.src);
@@ -172,6 +199,7 @@ export async function PATCH(request: Request, ctx: RouteCtx) {
   const uploadDir = join(process.cwd(), "public", "uploads", "gallery");
   await mkdir(uploadDir, { recursive: true });
 
+  // Append new images after existing ones
   let imgIdx = items.filter((i) => i.kind === "image").length;
   for (const imageFile of imageFiles) {
     imgIdx += 1;
@@ -220,6 +248,7 @@ export async function PATCH(request: Request, ctx: RouteCtx) {
     );
   }
 
+  // Handle slug changes — check for collisions against all other albums
   const allAlbums = await readGalleryAlbums();
   const others = allAlbums.filter((a) => a.slug !== oldSlug);
 
@@ -249,6 +278,7 @@ export async function PATCH(request: Request, ctx: RouteCtx) {
     coverAlt = coverAltRaw;
   }
 
+  // Spread `...existing` preserves any fields not explicitly listed
   const updated: GalleryAlbum = {
     ...existing,
     slug: newSlug,
@@ -284,6 +314,8 @@ export async function DELETE(_request: Request, ctx: RouteCtx) {
     return Response.json({ ok: false, error: "Album nije pronađen." }, { status: 404 });
   }
 
+  // Clean up all uploaded files associated with the deleted album.
+  // YouTube items (kind: "youtube") have no local files, so they're skipped.
   for (const item of removed.items) {
     if (item.kind === "image" || item.kind === "videoFile") {
       if (isGalleryManagedUpload(item.src)) await unlinkPublicUpload(item.src);

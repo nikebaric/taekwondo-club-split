@@ -1,13 +1,27 @@
 /**
- * Rezultati — podaci u `data/achievements.json` (API administracije).
+ * CONCEPT: TypeScript Union Types for Domain Modeling
+ *
+ * This file uses string literal union types (e.g., "gold" | "silver" | "bronze")
+ * instead of enums for domain concepts. This approach:
+ * - Produces no runtime JavaScript (types are erased at compile time)
+ * - Works naturally with JSON serialization (just strings)
+ * - Gives full autocomplete and type-checking in the IDE
+ *
+ * Also demonstrated: the `Record<K, V>` utility type for exhaustive mappings,
+ * ensuring every union member has a corresponding label.
+ *
+ * Results — data in `data/achievements.json` (admin API).
  */
+
+// String literal union — restricts values to exactly these three strings.
+// Unlike an enum, this generates zero runtime code.
 export type AchievementMedal = "gold" | "silver" | "bronze";
 
 export type AchievementAgeGroup = "seniori" | "juniori" | "kadeti";
 
 export type AchievementDiscipline = "forme" | "borbe";
 
-/** ITF / klupska paleta pojaseva za prikaz rezultata */
+/** ITF / club belt palette for displaying results */
 export type AchievementBelt =
   | "bijeli"
   | "zuti"
@@ -18,6 +32,8 @@ export type AchievementBelt =
   | "crveni"
   | "crni";
 
+// `readonly T[]` means this array cannot be mutated (no push, pop, splice).
+// Combined with `as const`, TS knows the exact tuple of belt values.
 export const ACHIEVEMENT_BELTS: readonly AchievementBelt[] = [
   "bijeli",
   "zuti",
@@ -30,6 +46,9 @@ export const ACHIEVEMENT_BELTS: readonly AchievementBelt[] = [
 ] as const;
 
 export function pojasLabel(b: AchievementBelt): string {
+  // CONCEPT: Record<K, V> — a utility type that creates an object type where
+  // every key in K must exist with a value of type V. If you forget a belt,
+  // TypeScript will show a compile error — guaranteeing exhaustive mapping.
   const m: Record<AchievementBelt, string> = {
     bijeli: "Bijeli",
     zuti: "Žuti",
@@ -49,10 +68,10 @@ export type ClubAchievement = {
   discipline: AchievementDiscipline;
   name: string;
   competition: string;
-  /** ISO datum YYYY-MM-DD */
+  /** ISO date YYYY-MM-DD */
   date: string;
   ageGroup?: AchievementAgeGroup;
-  /** Natjecateljska kategorija (npr. težinska skupina, visina) — slobodan tekst */
+  /** Competition category (e.g. weight class, height) — free text */
   kategorija?: string;
   pojas?: AchievementBelt;
 };

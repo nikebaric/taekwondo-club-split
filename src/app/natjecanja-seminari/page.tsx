@@ -1,3 +1,16 @@
+/**
+ * src/app/natjecanja-seminari/page.tsx — Events calendar (route: /natjecanja-seminari)
+ *
+ * KEY CONCEPTS:
+ * - Simple DATA-DRIVEN PAGE — the pattern is always the same:
+ *   1. Export static `metadata` for SEO.
+ *   2. async Server Component fetches data.
+ *   3. Pass data to a presentational component (<CalendarEventsTable>).
+ *   This separation (data-fetching page → dumb display component) is
+ *   a scalable pattern used throughout the project.
+ * - `new Date().getFullYear()` runs on the server at request time, so
+ *   the year label is always accurate without client-side JS.
+ */
 import type { Metadata } from "next";
 import { CalendarEventsTable } from "@/components/calendar-events-table";
 import { SectionHeading } from "@/components/section-heading";

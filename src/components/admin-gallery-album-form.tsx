@@ -1,3 +1,22 @@
+/**
+ * AdminGalleryAlbumForm — form for creating and editing gallery albums.
+ *
+ * KEY CONCEPTS:
+ * - **Complex form with file uploads:** Like AdminNewsForm, this uses FormData to
+ *   handle both text fields and file inputs (images, videos). FormData is the standard
+ *   way to send multipart form data with the Fetch API.
+ * - **Set state for tracking removals:** Uses `useState<Set<number>>` to track which
+ *   album items the user wants to remove. A Set is ideal here because lookups and
+ *   toggles are O(1), and duplicates are impossible. The functional update pattern
+ *   `setRemoveSet(prev => ...)` ensures we work with the latest state.
+ * - **useMemo for derived values:** `removeIndicesCsv` converts the Set to a
+ *   comma-separated string, only recomputing when the Set changes. This avoids
+ *   recalculating on every render.
+ * - **Mode pattern ("create" | "edit"):** Same component handles both creating and
+ *   editing. The mode determines which API endpoint, HTTP method, and UI to use.
+ * - **router.push() + router.refresh():** Navigates to the album page and forces
+ *   Next.js to re-fetch server data so the updated album appears immediately.
+ */
 "use client";
 
 import { useRouter } from "next/navigation";
@@ -27,8 +46,12 @@ export function AdminGalleryAlbumForm({ mode, editSlug, initialAlbum }: AdminGal
   const router = useRouter();
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Using a Set for O(1) lookups: .has(idx) is instant regardless of how many items.
+  // Initialized with `new Set()` (empty) — items are added/removed via toggleRemove.
   const [removeSet, setRemoveSet] = useState<Set<number>>(new Set());
 
+  // Functional update pattern: `prev =>` receives the current state value.
+  // This avoids stale closure issues when toggling rapidly.
   const toggleRemove = (idx: number) => {
     setRemoveSet((prev) => {
       const next = new Set(prev);
@@ -38,6 +61,7 @@ export function AdminGalleryAlbumForm({ mode, editSlug, initialAlbum }: AdminGal
     });
   };
 
+  // useMemo: only recomputes the CSV string when removeSet changes.
   const removeIndicesCsv = useMemo(() => [...removeSet].sort((a, b) => a - b).join(","), [removeSet]);
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {

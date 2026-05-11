@@ -1,3 +1,22 @@
+/**
+ * src/app/news/[slug]/page.tsx — Single news article (route: /news/:slug)
+ *
+ * KEY CONCEPTS:
+ * - DYNAMIC ROUTE SEGMENT — the folder name `[slug]` tells Next.js this
+ *   route has a variable segment. Visiting `/news/my-article` passes
+ *   `{ slug: "my-article" }` in the `params` prop. The brackets are
+ *   part of the file-system convention, not actual file characters.
+ * - `generateMetadata` — an async function export that computes <head>
+ *   tags dynamically per request. Next.js calls it before rendering the
+ *   page, passing the same `params`. This lets you set the <title> and
+ *   Open Graph tags to the actual article title, which is essential for
+ *   SEO and social sharing of dynamic content.
+ * - `notFound()` — a Next.js helper that triggers the nearest
+ *   `not-found.tsx` boundary (or the built-in 404). No need to return
+ *   a component — calling notFound() throws a special signal internally.
+ * - `params` is a Promise in Next.js 15+ (it was a plain object before).
+ *   You must `await params` before reading its properties.
+ */
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -13,8 +32,14 @@ import { fetchLocalNewsPostBySlug, fetchNewsPostBySlug } from "@/lib/news-querie
 import { resolveArticleGallery } from "@/lib/news-resolve-gallery";
 import { stripHtml } from "@/lib/news-post";
 
+// TypeScript type for the component's props.
+// `params` is a Promise in Next.js 15+ — this is a breaking change from
+// earlier versions where it was a synchronous plain object.
 type Props = { params: Promise<{ slug: string }> };
 
+// generateMetadata runs on the server before the page renders.
+// It receives the same props as the page component, so you can fetch
+// the article and dynamically set <title>, description, og:image, etc.
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const post = await fetchNewsPostBySlug(slug);
@@ -30,10 +55,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function NewsPostPage({ params }: Props) {
+  // Destructure the slug from the awaited params Promise
   const { slug } = await params;
 
+  // Fetch article data on the server — the client never sees these calls
   const post = await fetchNewsPostBySlug(slug);
   const raw = await fetchLocalNewsPostBySlug(slug);
+  // notFound() immediately halts rendering and shows the 404 page
   if (!post || !raw) notFound();
 
   const credit = post.articleCreditLine?.trim();
@@ -68,7 +96,7 @@ export default async function NewsPostPage({ params }: Props) {
       </header>
       {coverSrc ? (
         <div className="mt-8 aspect-[2/1] overflow-hidden rounded-2xl bg-slate-200 shadow-sm">
-          {/* eslint-disable-next-line @next/next/no-img-element -- naslovna fotografija članka */}
+          {/* eslint-disable-next-line @next/next/no-img-element -- article cover photo */}
           <img
             src={coverSrc}
             alt={plainTitle}

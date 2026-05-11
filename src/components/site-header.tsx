@@ -1,3 +1,19 @@
+/**
+ * SiteHeader — the main navigation bar for the site.
+ *
+ * KEY CONCEPTS:
+ * - **Server Component** (default in Next.js App Router): no "use client" directive,
+ *   so this component runs on the server. It can directly `await` async functions
+ *   like `getMemberSession()` — something Client Components cannot do.
+ * - **Composition pattern**: this component assembles smaller, specialized components
+ *   (HeaderAccount, OutsideClickDetails, CloseDetailsLink) rather than implementing
+ *   everything itself. This keeps each piece focused and testable.
+ * - **Server-to-Client data flow**: the server fetches auth data, then passes it as
+ *   props to Client Components (HeaderAccount). This is the recommended pattern —
+ *   fetch on the server, render interactivity on the client.
+ * - **Responsive design**: Tailwind's `hidden lg:flex` / `lg:hidden` breakpoints
+ *   swap between a desktop nav and a mobile hamburger menu without JavaScript.
+ */
 import Image from "next/image";
 import Link from "next/link";
 import { CloseDetailsLink } from "@/components/close-details-link";
@@ -6,19 +22,29 @@ import { OutsideClickDetails } from "@/components/outside-click-details";
 import { getMemberSession, isAdminSession } from "@/lib/auth-check";
 import { nav, site } from "@/config/site";
 
+// This is an async Server Component — it can use `await` at the top level.
+// Next.js will wait for the data before sending the HTML to the browser.
 export async function SiteHeader() {
+  // Server-side data fetching: session data is read from cookies on the server.
+  // The result is never exposed to the client bundle — only the rendered HTML is sent.
   const session = await getMemberSession();
   const memberName = session?.name ?? null;
   const memberEmail = session?.email ?? null;
   const adminHubVisible = await isAdminSession();
 
   return (
+    // `sticky top-0 z-50` pins the header to the viewport top on scroll.
     <header className="sticky top-0 z-50 border-b border-[var(--border-subtle)] bg-[var(--surface)] shadow-[var(--shadow-sm)]">
       <div className="mx-auto flex w-full max-w-[min(100%,90rem)] items-center justify-between gap-3 px-4 py-3 sm:gap-4 sm:px-6 sm:py-4 lg:gap-5">
+        {/* Next.js <Link> enables client-side navigation — clicking this won't do
+            a full page reload. It prefetches the target route for instant transitions. */}
         <Link
           href="/"
           className="group flex shrink-0 items-center gap-2.5 rounded-lg outline-none ring-offset-2 ring-offset-white focus-visible:ring-2 focus-visible:ring-[var(--accent)]/35 sm:gap-3.5"
         >
+          {/* next/image automatically optimizes images: resizes, converts to modern
+              formats (WebP/AVIF), and lazy-loads by default. `priority` disables
+              lazy-loading for above-the-fold images like the logo. */}
           <Image
             src={site.logo}
             alt=""
@@ -36,6 +62,9 @@ export async function SiteHeader() {
             </span>
           </div>
         </Link>
+        {/* Desktop navigation — hidden on mobile (`hidden lg:flex`).
+            .map() renders a list from an array — each item needs a unique `key` prop
+            so React can efficiently track which items changed during re-renders. */}
         <nav className="hidden min-w-0 flex-1 items-center justify-center gap-0.5 lg:flex xl:gap-1">
           {nav.map((item) => (
             <Link
@@ -48,6 +77,8 @@ export async function SiteHeader() {
           ))}
         </nav>
         <div className="flex shrink-0 items-center gap-2 sm:gap-3">
+          {/* Server-fetched data (memberName, adminHubVisible) is passed as props
+              to the Client Component. This is the "server-fetches, client-renders" pattern. */}
           <HeaderAccount
             memberName={memberName}
             memberEmail={memberEmail}
@@ -64,6 +95,17 @@ export async function SiteHeader() {
   );
 }
 
+/**
+ * MobileNav — mobile hamburger menu, rendered only on small screens.
+ *
+ * Uses the native HTML `<details>/<summary>` element (via OutsideClickDetails)
+ * for toggle behavior without extra state management. This is a progressive
+ * enhancement pattern — the menu works even if JavaScript fails to load.
+ *
+ * The inline type annotation `{ memberName: string | null; ... }` is a TypeScript
+ * pattern for defining props directly without a separate `type` or `interface`.
+ * Useful when the props shape is only needed in one place.
+ */
 function MobileNav({
   memberName,
   memberEmail,
@@ -73,6 +115,8 @@ function MobileNav({
   memberEmail: string | null;
   adminHubVisible: boolean;
 }) {
+  // lg:hidden hides this on desktop; OutsideClickDetails is a Client Component
+  // that wraps a <details> element and closes it on outside clicks.
   return (
     <OutsideClickDetails className="relative lg:hidden">
       <summary className="list-none cursor-pointer rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-900 [&::-webkit-details-marker]:hidden">
@@ -88,6 +132,8 @@ function MobileNav({
             {item.label}
           </CloseDetailsLink>
         ))}
+        {/* Conditional rendering: the admin link only appears if the user has admin privileges.
+            Using `? ... : null` is a common React pattern for "render or nothing". */}
         {adminHubVisible ? (
           <CloseDetailsLink
             href="/admin"

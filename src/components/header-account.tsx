@@ -1,3 +1,20 @@
+/**
+ * HeaderAccount — user account menu for the site header.
+ *
+ * KEY CONCEPTS:
+ * - **Client Component ("use client"):** Needed for click handlers, dropdown
+ *   interactivity, and DOM manipulation (closing <details> elements).
+ * - **Conditional rendering based on auth state:** The component renders completely
+ *   different UIs depending on whether `memberName` is set (logged in) or null
+ *   (logged out). This is a common React pattern for auth-aware components.
+ * - **Dropdown menu pattern:** Uses native `<details>/<summary>` for the toggle,
+ *   enhanced with OutsideClickDetails to close on outside clicks. No state needed
+ *   for open/close — the browser handles it natively.
+ * - **Two exports for responsive design:** HeaderAccount (desktop) and
+ *   HeaderAccountMobile share the same Props type but render different layouts.
+ * - **`void` keyword with async:** `void signOutAndGoToLogin()` explicitly discards
+ *   the Promise return value, signaling to ESLint that unhandled rejection is intentional.
+ */
 "use client";
 
 import Link from "next/link";
@@ -5,24 +22,30 @@ import { CloseDetailsLink } from "@/components/close-details-link";
 import { OutsideClickDetails } from "@/components/outside-click-details";
 import { loginPath } from "@/config/site";
 
+// TypeScript type for props shared between HeaderAccount and HeaderAccountMobile.
+// `string | null` is a union type — memberName is either a string or null.
 type Props = {
   memberName: string | null;
-  /** Prikazuje se ispod imena kada postoji (noviji kolačići sesije). */
+  /** Displayed below the name when available (newer session cookies). */
   memberEmail?: string | null;
-  /** Poveznica na /admin — samo za prijavljene klupske admine. */
+  /** Link to /admin — only visible to logged-in club admins. */
   adminHubVisible?: boolean;
 };
 
+// Standalone async function (not a hook) — can be called from event handlers.
+// Uses fetch() to call the logout API, then does a full page navigation.
 async function signOutAndGoToLogin() {
   const res = await fetch("/api/auth/logout", {
     method: "POST",
     credentials: "same-origin",
   });
   if (!res.ok) return;
+  // window.location.assign() triggers a full page navigation (not client-side).
+  // This ensures the browser re-reads cookies and the server sees the new auth state.
   window.location.assign("/login");
 }
 
-/** Inicijali za avatar (nema slike profila u sesiji). */
+/** Initials for the avatar (no profile picture in the session). */
 function initialsFromName(name: string): string {
   const parts = name.trim().split(/\s+/).filter(Boolean);
   if (parts.length === 0) return "?";
@@ -75,7 +98,13 @@ function ChevronDown() {
   );
 }
 
-/** Desktop: klik na ime otvara izbornik s podacima i odjavom (uzor: Actions Pack / Elementor logout UX). */
+/**
+ * Desktop account menu: shows user info + sign-out when logged in, or a login button.
+ *
+ * The if/else pattern here is a **conditional rendering** approach — the component
+ * returns entirely different JSX trees based on the auth state. This is cleaner
+ * than hiding elements with CSS when the two states have very different markup.
+ */
 export function HeaderAccount({ memberName, memberEmail, adminHubVisible }: Props) {
   if (memberName) {
     const email = memberEmail?.trim() || null;
@@ -121,6 +150,10 @@ export function HeaderAccount({ memberName, memberEmail, adminHubVisible }: Prop
                 Administracija
               </CloseDetailsLink>
             ) : null}
+            {/* DOM manipulation in React: `.closest("details")` walks up the DOM tree
+                to find the parent <details> and closes it before signing out.
+                `as HTMLElement` is a TypeScript type assertion — React's event target
+                type is more generic, so we narrow it to access DOM methods. */}
             <button
               type="button"
               onClick={(e) => {
@@ -148,7 +181,7 @@ export function HeaderAccount({ memberName, memberEmail, adminHubVisible }: Prop
   );
 }
 
-/** Mobilni izbornik: ime + odjava u istom padajućem izgledu kao ostatak Izbornika */
+/** Mobile menu: name + sign-out in the same dropdown layout as the rest of the menu. */
 export function HeaderAccountMobile({ memberName, memberEmail }: Props) {
   if (memberName) {
     const email = memberEmail?.trim() || null;

@@ -1,3 +1,19 @@
+/**
+ * Next.js Route Handler — PATCH & DELETE /api/news/[slug]
+ *
+ * KEY CONCEPTS:
+ * - **Dynamic route segments**: The `[slug]` folder name creates a dynamic parameter.
+ *   When a request hits `/api/news/my-post`, Next.js passes `{ slug: "my-post" }` as
+ *   `ctx.params`. In Next.js 15+, `params` is a Promise that must be awaited.
+ * - **Multiple HTTP methods in one file**: Exporting both `PATCH` and `DELETE` functions
+ *   from a single `route.ts` file lets you handle different operations on the same
+ *   resource (RESTful pattern: PATCH to update, DELETE to remove).
+ * - **File cleanup on delete**: When removing a post, associated uploaded files should
+ *   be deleted from disk too — otherwise "orphan" files accumulate. The `unlink()` call
+ *   is wrapped in try/catch because the file might already be gone.
+ * - **`export const runtime = "nodejs"`**: Required here for filesystem operations
+ *   (writing/deleting files) which aren't available in the Edge Runtime.
+ */
 import { mkdir, unlink, writeFile } from "fs/promises";
 import { join } from "path";
 import { revalidatePath } from "next/cache";
@@ -38,13 +54,19 @@ function safeBaseName(name: string): string {
   return base.length > 0 ? base : "datoteka";
 }
 
+/**
+ * Delete an uploaded file from the `public/` directory.
+ * Only processes paths starting with "/uploads/" to prevent accidental deletion of
+ * other files (a basic safety check against path traversal).
+ */
 async function unlinkPublicUpload(rel: string | null | undefined) {
   if (!rel?.startsWith("/uploads/")) return;
+  // Convert the URL path back to a filesystem path
   const full = join(process.cwd(), "public", rel.replace(/^\//, ""));
   try {
     await unlink(full);
   } catch {
-    /* ignore */
+    /* ignore — file may already be deleted or never existed */
   }
 }
 
@@ -73,6 +95,7 @@ function parseYoutubeLines(raw: string): { embeds: string[]; error?: string } {
   return { embeds };
 }
 
+/** Extract existing image sources from a post, handling both gallery and legacy single-image formats */
 function existingGalleryImages(e: LocalNewsPost): string[] {
   if (e.galleryImageSrcs && e.galleryImageSrcs.length > 0) return [...e.galleryImageSrcs];
   if (e.imageSrc) return [e.imageSrc];
@@ -88,14 +111,24 @@ function existingGalleryVideos(e: LocalNewsPost): Array<{ src: string; mime: str
   return [];
 }
 
+/**
+ * Route context type for dynamic segments. In Next.js 15+, `params` is a Promise
+ * (not a plain object) — you must `await ctx.params` to read the values.
+ * This is a breaking change from earlier Next.js versions.
+ */
 type RouteCtx = { params: Promise<{ slug: string }> };
 
+/**
+ * PATCH handler — update an existing news post.
+ * The second parameter `ctx` provides route context including dynamic segment values.
+ */
 export async function PATCH(request: Request, ctx: RouteCtx) {
   const store = await cookies();
   if (!verifySessionToken(store.get(sessionCookieName())?.value)) {
     return Response.json({ ok: false, error: "Niste prijavljeni." }, { status: 401 });
   }
 
+  // Destructure the slug from the awaited params Promise
   const { slug: oldSlug } = await ctx.params;
   const existing = await findLocalPostBySlug(oldSlug);
   if (!existing) {
@@ -113,6 +146,7 @@ export async function PATCH(request: Request, ctx: RouteCtx) {
   const descriptionRaw = String(form.get("description") ?? "").trim();
   const description = normalizeNewsDescriptionPlain(descriptionRaw);
   const youtubeRaw = String(form.get("youtube") ?? "").trim();
+  // FormData checkboxes send "on" when checked and are absent when unchecked
   const removeAllImages = form.get("remove_all_images") === "on";
   const removeAllVideos = form.get("remove_all_videos") === "on";
 
@@ -171,9 +205,12 @@ export async function PATCH(request: Request, ctx: RouteCtx) {
   const uploadDir = join(process.cwd(), "public", "uploads", "news");
   await mkdir(uploadDir, { recursive: true });
 
+  // Start with existing media, then handle removal and replacement.
+  // This "merge" approach lets users keep old images while adding new ones.
   let galleryImageSrcs = existingGalleryImages(existing);
   let galleryVideos = existingGalleryVideos(existing);
 
+  // If the user explicitly requested removal, delete files from disk and clear the list
   if (removeAllImages) {
     await unlinkMany(galleryImageSrcs);
     galleryImageSrcs = [];
@@ -184,6 +221,7 @@ export async function PATCH(request: Request, ctx: RouteCtx) {
     galleryVideos = [];
   }
 
+  // If new images are uploaded, they replace all existing images (old files are deleted)
   if (imageFiles.length > 0) {
     await unlinkMany(galleryImageSrcs);
     galleryImageSrcs = [];
@@ -218,6 +256,8 @@ export async function PATCH(request: Request, ctx: RouteCtx) {
 
   const bodyHtml = composeNewsDescriptionHtml(description);
 
+  // When the title changes, the slug changes too. Exclude the current post from
+  // uniqueness checks so renaming "My Post" back to "My Post" doesn't append "-2".
   const allPosts = await readLocalNewsPosts();
   const others = allPosts.filter((p) => p.slug !== oldSlug);
   const newSlug = uniqueSlug(slugify(title), others);
@@ -231,6 +271,8 @@ export async function PATCH(request: Request, ctx: RouteCtx) {
   const createdByLineFallback =
     session ? formatArticleCreditFromAuthor(session.name) : resolveArticleCreditLine();
 
+  // Spread `...existing` preserves fields not explicitly listed (like `id`),
+  // then the following properties override only what changed.
   const updated: LocalNewsPost = {
     ...existing,
     slug: newSlug,
@@ -255,6 +297,7 @@ export async function PATCH(request: Request, ctx: RouteCtx) {
     return Response.json({ ok: false, error: "Ažuriranje nije uspjelo." }, { status: 500 });
   }
 
+  // Revalidate the old slug page, the new slug page (if changed), and listing pages
   revalidatePath("/");
   revalidatePath("/news");
   revalidatePath(`/news/${oldSlug}`);
@@ -265,6 +308,11 @@ export async function PATCH(request: Request, ctx: RouteCtx) {
   return Response.json({ ok: true, slug: newSlug });
 }
 
+/**
+ * DELETE handler — remove a news post and clean up its files.
+ * The `_request` prefix (underscore) is a convention meaning "unused parameter" —
+ * TypeScript requires us to declare it because `ctx` is the second parameter.
+ */
 export async function DELETE(_request: Request, ctx: RouteCtx) {
   const store = await cookies();
   if (!verifySessionToken(store.get(sessionCookieName())?.value)) {
@@ -272,11 +320,15 @@ export async function DELETE(_request: Request, ctx: RouteCtx) {
   }
 
   const { slug } = await ctx.params;
+  // `deleteLocalPostBySlug` returns the deleted post (or null if not found),
+  // which we need to know which files to clean up
   const removed = await deleteLocalPostBySlug(slug);
   if (!removed) {
     return Response.json({ ok: false, error: "Članak nije pronađen." }, { status: 404 });
   }
 
+  // Collect all file paths that need cleanup — handles both gallery arrays and
+  // legacy single-file fields for backwards compatibility
   const imgs = removed.galleryImageSrcs?.length ? removed.galleryImageSrcs : removed.imageSrc ? [removed.imageSrc] : [];
   const vids =
     removed.galleryVideos?.length ?
@@ -284,6 +336,7 @@ export async function DELETE(_request: Request, ctx: RouteCtx) {
     : removed.videoSrc ? [removed.videoSrc]
     : [];
 
+  // Delete the actual files from disk
   await unlinkMany(imgs);
   await unlinkMany(vids);
 

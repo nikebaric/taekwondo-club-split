@@ -1,32 +1,49 @@
+/**
+ * GalleryMedia — renders a gallery item as image, YouTube embed, or video file.
+ *
+ * KEY CONCEPTS:
+ * - **Polymorphic component pattern:** A single component that renders different
+ *   content based on `item.kind`. TypeScript discriminated unions ensure each branch
+ *   has access to the correct fields (e.g., `item.src` for images, `item.embedUrl`
+ *   for YouTube). The compiler catches errors if you access the wrong field.
+ * - **Discriminated union:** `GalleryItem` is a union type where each variant has a
+ *   `kind` field ("image" | "youtube" | "video-file"). Checking `item.kind` narrows
+ *   the type — TypeScript knows exactly which properties are available in each branch.
+ * - **Layout variants via props:** The `slideLayout` prop changes sizing/borders
+ *   without duplicating the component. This is the "variant" pattern — one component
+ *   with different visual modes controlled by a prop.
+ * - **Exported constants:** `galleryAlbumSlideBannerClass` etc. are shared with other
+ *   files that need consistent sizing (e.g., album page hero sections).
+ */
 import Image from "next/image";
 import type { GalleryItem } from "@/config/gallery";
 
-/** Ista visina kao hero baner na stranici albuma (`/galerija/[slug]`). */
+/** Same height as the hero banner on the album page (`/galerija/[slug]`). */
 export const galleryAlbumSlideBannerClass = "h-[38vh] min-h-[220px]";
 
 /**
  * Isti „okvir“ kao naslovna slika albuma: visina stripa, overflow, donji rub.
- * Slika + gradient (`absolute inset-0`) dijele točno ovaj pravokutnik.
+ * Image + gradient (`absolute inset-0`) share exactly this rectangle.
  */
 export const galleryAlbumHeroStripClass = `relative w-full ${galleryAlbumSlideBannerClass} overflow-hidden border-b border-slate-200/90`;
 
-/** Isti overlay kao hero — `absolute inset-0`, iste dimenzije kao roditelj (`relative` strip). */
+/** Same overlay as the hero — `absolute inset-0`, same dimensions as the parent (`relative` strip). */
 export const galleryAlbumHeroGradientClass =
   "pointer-events-none absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent";
 
 type Props = {
   item: GalleryItem;
   /**
-   * `albumBanner` — isti omjer kao naslovna slika albuma (38vh, min 220px).
-   * `albumThumb` — umanjena pločica u rešetki (kvadrat, rubovi).
-   * `card` — klasična kartica 4:3 (zadanо).
+   * `albumBanner` — same aspect ratio as the album cover image (38vh, min 220px).
+   * `albumThumb` — reduced tile in the grid (square, borders).
+   * `card` — classic 4:3 card (default).
    */
   slideLayout?: "card" | "albumBanner" | "albumThumb";
 };
 
 function figureShell(slideLayout: Props["slideLayout"]): string {
   if (slideLayout === "albumBanner") {
-    // Bez dodatnih rubova oko stripa — veličina = strip (`galleryAlbumHeroStripClass` + bg).
+    // No extra borders around the strip — size equals strip (`galleryAlbumHeroStripClass` + bg).
     return "group overflow-hidden rounded-none border-0 bg-[var(--surface)] shadow-none";
   }
   if (slideLayout === "albumThumb") {
@@ -42,6 +59,9 @@ function imageSizes(slideLayout: Props["slideLayout"]): string {
   return "100vw";
 }
 
+// The function checks `item.kind` to decide what to render. TypeScript's
+// type narrowing means inside `if (item.kind === "image")`, `item` is
+// automatically typed as the image variant with `src`, `alt`, `caption` etc.
 export function GalleryMedia({ item, slideLayout = "card" }: Props) {
   if (item.kind === "image") {
     const mediaFrame =

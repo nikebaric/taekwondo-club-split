@@ -1,3 +1,29 @@
+/**
+ * SiteFooter — the page footer with navigation, address, contact, and social links.
+ *
+ * KEY CONCEPTS:
+ * - **Server Component**: no "use client" directive, so this runs entirely on the
+ *   server. All the HTML is pre-rendered — zero JavaScript is shipped for this component.
+ * - **Static UI from config**: all content (address, phone, social links) comes from
+ *   a centralized `site` config object. Changing the config updates the footer everywhere.
+ * - **Conditional rendering**: social links gracefully degrade — if a URL isn't
+ *   configured, a faded/disabled icon is shown instead of a broken link.
+ * - **Responsive grid**: Tailwind's `sm:grid-cols-2 lg:grid-cols-4` creates a layout
+ *   that adapts from 1 column (mobile) to 4 columns (desktop) without media queries in CSS.
+ */
+/**
+ * SiteFooter — the global footer rendered on every page.
+ *
+ * KEY CONCEPTS:
+ * - **Server Component:** No "use client" — this runs on the server. Since the
+ *   footer has no interactivity (no clicks, no state), it doesn't need client JS.
+ *   This reduces the JavaScript bundle sent to the browser.
+ * - **Static UI with dynamic data:** The footer content comes from a config object
+ *   (`site`), making it easy to update contact info, social links, etc. in one place.
+ * - **Conditional rendering:** Social links use the `condition ? <element> : <fallback>`
+ *   ternary pattern to show a clickable link when available or a greyed-out placeholder
+ *   when the URL isn't configured yet.
+ */
 import Image from "next/image";
 import Link from "next/link";
 import { FacebookLogo } from "@/components/facebook-logo";
@@ -8,6 +34,7 @@ import { contactPageLabel, nav, phoneToTelHref, site } from "@/config/site";
 export function SiteFooter() {
   return (
     <footer className="border-t border-[var(--border-subtle)] bg-gradient-to-b from-white from-0% via-[var(--surface-deep)] via-25% to-[var(--surface-deep)]">
+      {/* CSS Grid with responsive breakpoints — stacks on mobile, 4-column on desktop */}
       <div className="mx-auto grid max-w-6xl gap-12 px-4 py-16 sm:grid-cols-2 sm:px-6 sm:py-20 lg:grid-cols-4">
         <div className="space-y-3">
           <div className="flex items-start gap-3">
@@ -26,6 +53,8 @@ export function SiteFooter() {
         </div>
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Navigacija</p>
+          {/* Rendering from an array keeps the footer in sync with the header nav.
+              Single source of truth — add a nav item in config, it appears everywhere. */}
           <ul className="mt-4 space-y-2">
             {nav.map((item) => (
               <li key={item.href}>
@@ -41,6 +70,8 @@ export function SiteFooter() {
         </div>
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Lokacija</p>
+          {/* The <address> element is semantic HTML — it tells search engines and
+              screen readers that this block contains contact/location information. */}
           <address className="mt-4 space-y-1 text-sm not-italic leading-relaxed text-slate-600">
             <div>{site.address.venueName}</div>
             <div>{site.address.street}</div>
@@ -53,6 +84,10 @@ export function SiteFooter() {
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">{contactPageLabel}</p>
           <ul className="mt-4 space-y-2 text-sm">
+            {/* Conditional rendering pattern: only render the phone/email link if
+                the value is configured. `? ... : null` means "show or skip". */}
+            {/* Conditional rendering with ternary: only render the phone link if
+                site.phone is truthy. `? ... : null` means "render nothing" when false. */}
             {site.phone ? (
               <li>
                 <a
@@ -88,6 +123,8 @@ export function SiteFooter() {
               </a>
             </li>
             <li>
+              {/* Ternary conditional rendering: if instagram URL exists, render a
+                  clickable link; otherwise, render a faded/disabled placeholder. */}
               {site.social.instagram ? (
                 <a
                   href={site.social.instagram}
@@ -124,6 +161,10 @@ export function SiteFooter() {
           </ul>
         </div>
       </div>
+      {/* Dynamic year via `new Date().getFullYear()` — since this is a Server Component,
+          the year is computed at render time on the server (not in the browser). */}
+      {/* new Date().getFullYear() runs on the server at render time, keeping
+          the copyright year always current without any client-side JavaScript. */}
       <div className="border-t border-slate-200/80 py-6 text-center text-xs text-slate-500">
         © {new Date().getFullYear()} {site.name}. Sva prava pridržana.
       </div>

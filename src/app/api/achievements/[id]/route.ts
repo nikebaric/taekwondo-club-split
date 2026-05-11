@@ -1,3 +1,20 @@
+/**
+ * Next.js Route Handler — PATCH & DELETE /api/achievements/[id]
+ *
+ * KEY CONCEPTS:
+ * - **CRUD API pattern (Update + Delete)**: This file handles the "U" and "D" of CRUD.
+ *   The `[id]` folder creates a dynamic segment — requests to `/api/achievements/abc123`
+ *   make `{ id: "abc123" }` available via `ctx.params`.
+ * - **Partial updates with PATCH**: Unlike PUT (which replaces the entire resource),
+ *   PATCH only updates the fields that are present in the request body. The
+ *   `Partial<Omit<ClubAchievement, "id">>` type says "any subset of ClubAchievement
+ *   fields except id" — because the id is immutable and comes from the URL.
+ * - **Clearing optional fields**: Setting a field to `null` or `""` in the request
+ *   means "remove this optional field", while omitting it means "leave it unchanged".
+ *   This distinction is important for a good PATCH implementation.
+ * - **revalidatePath with dynamic segments**: After updating data, we revalidate both
+ *   the listing page and the individual detail page so Next.js serves fresh content.
+ */
 import { revalidatePath } from "next/cache";
 import {
   ACHIEVEMENT_BELTS,
@@ -23,6 +40,10 @@ function isIsoDate(s: string): boolean {
   return !Number.isNaN(t);
 }
 
+/**
+ * In Next.js 15+, route handler params are async (a Promise).
+ * This type defines the shape of the second argument passed to each handler.
+ */
 type Params = { params: Promise<{ id: string }> };
 
 export async function PATCH(req: Request, ctx: Params) {
@@ -30,6 +51,7 @@ export async function PATCH(req: Request, ctx: Params) {
     return Response.json({ ok: false, error: "Niste prijavljeni." }, { status: 401 });
   }
 
+  // Await the params Promise to extract the dynamic segment value
   const { id } = await ctx.params;
   if (!id) {
     return Response.json({ ok: false, error: "Nedostaje id." }, { status: 400 });
@@ -45,8 +67,13 @@ export async function PATCH(req: Request, ctx: Params) {
     return Response.json({ ok: false, error: "Neispravan JSON." }, { status: 400 });
   }
   const b = body as Record<string, unknown>;
+  // `Partial<Omit<ClubAchievement, "id">>` — TypeScript utility types combined:
+  // `Omit` removes the "id" key, `Partial` makes every remaining key optional.
+  // This perfectly models "only update the fields you send".
   const patch: Partial<Omit<ClubAchievement, "id">> = {};
 
+  // Each field is only added to `patch` if it was included in the request.
+  // This way, omitted fields are left unchanged in the stored record.
   if (b.medal !== undefined) {
     const medal = b.medal as AchievementMedal;
     if (!MEDALS.has(medal)) {
@@ -82,6 +109,8 @@ export async function PATCH(req: Request, ctx: Params) {
     }
     patch.date = date;
   }
+  // For optional fields, sending `null` or `""` explicitly clears them (sets to undefined).
+  // This is the standard PATCH convention for "unset this field".
   if (b.ageGroup !== undefined) {
     if (b.ageGroup === null || String(b.ageGroup).trim() === "") {
       patch.ageGroup = undefined;
@@ -125,6 +154,7 @@ export async function PATCH(req: Request, ctx: Params) {
 
   revalidatePath("/uspjesi");
   revalidatePath("/admin/rezultati");
+  // `encodeURIComponent` ensures special characters in the id don't break the URL
   revalidatePath(`/admin/rezultati/${encodeURIComponent(id)}`);
 
   return Response.json({ ok: true, achievement: updated });

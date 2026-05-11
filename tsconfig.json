@@ -1,27 +1,80 @@
+// CONCEPT: TypeScript Compiler Configuration
+//
+// tsconfig.json controls how TypeScript compiles your code. Key sections:
+// - "compilerOptions" — what TS checks and how it transforms code
+// - "include" — which files TS should process
+// - "exclude" — which files to ignore
+//
+// This file uses JSONC (JSON with Comments) — a TypeScript/VS Code extension
+// that allows comments in JSON files.
 {
   "compilerOptions": {
+    // TARGET: Which JavaScript version to output. ES2017 supports async/await
+    // natively, so TS won't polyfill it (smaller bundle).
     "target": "ES2017",
+
+    // LIB: Which type definitions to include. "dom" gives browser APIs
+    // (document, window), "esnext" gives latest JS features.
     "lib": ["dom", "dom.iterable", "esnext"],
+
+    // Allow importing .js files (useful for gradual TS adoption)
     "allowJs": true,
+
+    // Skip type-checking node_modules (much faster compilation)
     "skipLibCheck": true,
+
+    // STRICT MODE: Enables ALL strict type-checking options at once:
+    // - noImplicitAny: variables must have types (no implicit `any`)
+    // - strictNullChecks: null/undefined must be handled explicitly
+    // - strictFunctionTypes: function parameter types are checked
+    // This catches many bugs at compile time rather than runtime.
     "strict": true,
+
+    // Don't emit .js files — Next.js handles compilation with SWC/Babel.
+    // TS is used only for type-checking here.
     "noEmit": true,
+
+    // Compatibility between CommonJS (require) and ES modules (import)
     "esModuleInterop": true,
+
+    // MODULE SYSTEM: "esnext" uses ES module syntax (import/export).
+    // "bundler" resolution mimics how bundlers (webpack/turbopack) resolve imports.
     "module": "esnext",
     "moduleResolution": "bundler",
+
+    // Allow importing .json files as typed modules
     "resolveJsonModule": true,
+
+    // Each file is treated as an independent module (required for SWC/Babel)
     "isolatedModules": true,
+
+    // JSX transform: "react-jsx" uses the automatic runtime (no need to
+    // import React in every file that uses JSX — React 17+ feature)
     "jsx": "react-jsx",
+
+    // Cache type-checking results for faster subsequent builds
     "incremental": true,
+
+    // Next.js compiler plugin — provides additional type checking for
+    // Next.js-specific features (App Router, metadata, etc.)
     "plugins": [
       {
         "name": "next"
       }
     ],
+
+    // PATH ALIASES: "@/*" maps to "./src/*", so you can write:
+    //   import { site } from "@/config/site"
+    // instead of:
+    //   import { site } from "../../config/site"
+    // Cleaner imports that don't break when you move files.
     "paths": {
       "@/*": ["./src/*"]
     }
   },
+
+  // FILES TO INCLUDE: TS processes all .ts/.tsx/.mts files, plus Next.js
+  // generated type files (.next/types/).
   "include": [
     "next-env.d.ts",
     "**/*.ts",
@@ -30,5 +83,7 @@
     ".next/dev/types/**/*.ts",
     "**/*.mts"
   ],
+
+  // EXCLUDE: Never type-check node_modules (thousands of packages)
   "exclude": ["node_modules"]
 }
