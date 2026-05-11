@@ -118,7 +118,7 @@ export default function ProgramsPage() {
             Javite nam dob i ciljeve — preporučit ćemo termin prije ikakve obveze.
           </p>
           <Link
-            href="/contact"
+            href="/kontakt"
             className="mt-6 inline-flex rounded-full bg-[var(--accent)] px-6 py-3 text-sm font-semibold text-white hover:brightness-110"
           >
             Kontaktirajte nas

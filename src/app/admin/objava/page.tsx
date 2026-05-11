@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 
 export default async function AdminObjavaPage() {
   if (!(await isAdminSession())) {
-    redirect("/login?next=/admin/objava");
+    redirect("/prijava?next=/admin/objava");
   }
 
   const postsRaw = await readLocalNewsPosts();

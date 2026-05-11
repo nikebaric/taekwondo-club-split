@@ -20,7 +20,7 @@ export default async function AdminUrediAlbumPage({ params }: Props) {
   const session = await getMemberSession();
   if (!session) {
     const { slug } = await params;
-    redirect(`/login?next=${encodeURIComponent(`/admin/galerija/${slug}`)}`);
+    redirect(`/prijava?next=${encodeURIComponent(`/admin/galerija/${slug}`)}`);
   }
   if (!(await isGalleryAdminSession())) {
     redirect("/admin/galerija");

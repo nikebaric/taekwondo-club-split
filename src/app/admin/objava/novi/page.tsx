@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 
 export default async function AdminNovaNovostPage() {
   if (!(await isAdminSession())) {
-    redirect("/login?next=/admin/objava/novi");
+    redirect("/prijava?next=/admin/objava/novi");
   }
 
   return (

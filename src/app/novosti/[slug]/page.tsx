@@ -78,7 +78,7 @@ export default async function NewsPostPage({ params }: Props) {
       <p className="text-xs font-semibold uppercase tracking-[0.25em] text-[var(--brand-gold)]">
         Borilački portal · klub
       </p>
-      <Link href="/news" className="mt-4 inline-block text-sm font-semibold text-[var(--accent)]">
+      <Link href="/novosti" className="mt-4 inline-block text-sm font-semibold text-[var(--accent)]">
         ← Portal
       </Link>
       <header className="mt-8">

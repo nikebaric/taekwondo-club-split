@@ -81,7 +81,7 @@ export default async function NewsPage() {
                     />
                     <p className="mt-3 flex-1 text-[var(--muted)]">{stripHtml(post.excerpt.rendered)}</p>
                     <Link
-                      href={`/news/${post.slug}`}
+                      href={`/novosti/${post.slug}`}
                       className="mt-6 inline-flex text-sm font-semibold text-[var(--accent)]"
                     >
                       Pročitaj članak →

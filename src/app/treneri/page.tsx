@@ -34,7 +34,7 @@ export default function InstructorsRedirectPage() {
   // The empty-ish dependency array [router] means this runs once on mount.
   // router.replace navigates without adding an entry to the history stack.
   useEffect(() => {
-    router.replace("/about#treneri");
+    router.replace("/o-klubu#treneri");
   }, [router]);
 
   // Brief fallback UI shown for the instant before the redirect fires

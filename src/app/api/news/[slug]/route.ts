@@ -299,10 +299,10 @@ export async function PATCH(request: Request, ctx: RouteCtx) {
 
   // Revalidate the old slug page, the new slug page (if changed), and listing pages
   revalidatePath("/");
-  revalidatePath("/news");
-  revalidatePath(`/news/${oldSlug}`);
+  revalidatePath("/novosti");
+  revalidatePath(`/novosti/${oldSlug}`);
   if (newSlug !== oldSlug) {
-    revalidatePath(`/news/${newSlug}`);
+    revalidatePath(`/novosti/${newSlug}`);
   }
 
   return Response.json({ ok: true, slug: newSlug });
@@ -341,8 +341,8 @@ export async function DELETE(_request: Request, ctx: RouteCtx) {
   await unlinkMany(vids);
 
   revalidatePath("/");
-  revalidatePath("/news");
-  revalidatePath(`/news/${slug}`);
+  revalidatePath("/novosti");
+  revalidatePath(`/novosti/${slug}`);
 
   return Response.json({ ok: true });
 }

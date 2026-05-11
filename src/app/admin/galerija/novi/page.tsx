@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 
 export default async function AdminNoviAlbumPage() {
   const session = await getMemberSession();
-  if (!session) redirect("/login?next=/admin/galerija/novi");
+  if (!session) redirect("/prijava?next=/admin/galerija/novi");
   if (!(await isGalleryAdminSession())) {
     redirect("/admin/galerija");
   }

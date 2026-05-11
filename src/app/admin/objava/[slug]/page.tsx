@@ -24,7 +24,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function AdminEditNewsPage({ params }: Props) {
   if (!(await isAdminSession())) {
     const { slug } = await params;
-    redirect(`/login?next=${encodeURIComponent(`/admin/objava/${slug}`)}`);
+    redirect(`/prijava?next=${encodeURIComponent(`/admin/objava/${slug}`)}`);
   }
 
   const { slug } = await params;

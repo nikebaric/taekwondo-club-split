@@ -136,7 +136,7 @@ export async function POST(req: Request) {
 
   await appendAchievement(row);
   // Invalidate cached pages that display achievements so they reflect the new data
-  revalidatePath("/uspjesi");
+  revalidatePath("/rezultati");
   revalidatePath("/admin/rezultati");
 
   return Response.json({ ok: true, achievement: row });

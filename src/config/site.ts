@@ -147,18 +147,18 @@ export function phoneToTelHref(phone: string): string {
 export const contactPageLabel = "Kontakt" as const;
 
 /** Route for member / admin login (header button). */
-export const loginPath = "/login?next=/admin" as const;
+export const loginPath = "/prijava?next=/admin" as const;
 
 // Navigation array with `as const` — components can iterate this to render the
 // menu, and TypeScript knows the exact route strings at compile time (type-safe routing).
 export const nav = [
   { href: "/", label: "Naslovnica" },
-  { href: "/about", label: "O klubu" },
-  { href: "/programs", label: "Programi" },
-  { href: "/schedule", label: "Treninzi" },
+  { href: "/o-klubu", label: "O klubu" },
+  { href: "/programi", label: "Programi" },
+  { href: "/raspored-treninga", label: "Treninzi" },
   { href: "/natjecanja-seminari", label: "Natjecanja i seminari" },
-  { href: "/uspjesi", label: "Rezultati" },
-  { href: "/news", label: "Portal" },
+  { href: "/rezultati", label: "Rezultati" },
+  { href: "/novosti", label: "Portal" },
   { href: "/galerija", label: "Galerija" },
-  { href: "/contact", label: contactPageLabel },
+  { href: "/kontakt", label: contactPageLabel },
 ] as const;

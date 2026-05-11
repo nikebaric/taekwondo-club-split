@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 
 export default async function AdminKalendarNoviPage() {
   if (!(await isAdminSession())) {
-    redirect("/login?next=/admin/kalendar/novi");
+    redirect("/prijava?next=/admin/kalendar/novi");
   }
 
   return (

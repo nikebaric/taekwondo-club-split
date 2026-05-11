@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 
 export default async function AdminHubPage() {
   if (!(await isAdminSession())) {
-    redirect("/login?next=/admin");
+    redirect("/prijava?next=/admin");
   }
 
   const session = await getMemberSession();

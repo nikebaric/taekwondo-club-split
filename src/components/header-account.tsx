@@ -42,7 +42,7 @@ async function signOutAndGoToLogin() {
   if (!res.ok) return;
   // window.location.assign() triggers a full page navigation (not client-side).
   // This ensures the browser re-reads cookies and the server sees the new auth state.
-  window.location.assign("/login");
+  window.location.assign("/prijava");
 }
 
 /** Initials for the avatar (no profile picture in the session). */

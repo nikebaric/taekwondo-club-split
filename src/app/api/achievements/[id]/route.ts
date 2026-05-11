@@ -152,7 +152,7 @@ export async function PATCH(req: Request, ctx: Params) {
     return Response.json({ ok: false, error: "Zapis nije pronađen." }, { status: 404 });
   }
 
-  revalidatePath("/uspjesi");
+  revalidatePath("/rezultati");
   revalidatePath("/admin/rezultati");
   // `encodeURIComponent` ensures special characters in the id don't break the URL
   revalidatePath(`/admin/rezultati/${encodeURIComponent(id)}`);
@@ -175,7 +175,7 @@ export async function DELETE(_req: Request, ctx: Params) {
     return Response.json({ ok: false, error: "Zapis nije pronađen." }, { status: 404 });
   }
 
-  revalidatePath("/uspjesi");
+  revalidatePath("/rezultati");
   revalidatePath("/admin/rezultati");
 
   return Response.json({ ok: true });

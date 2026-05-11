@@ -42,7 +42,7 @@ function rezultatSubtitle(r: {
 
 export default async function AdminRezultatiPage() {
   if (!(await isAdminSession())) {
-    redirect("/login?next=/admin/rezultati");
+    redirect("/prijava?next=/admin/rezultati");
   }
 
   const rows = [...(await readAchievements())].sort(

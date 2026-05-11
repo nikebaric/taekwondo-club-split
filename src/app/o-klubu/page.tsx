@@ -77,11 +77,11 @@ export default function AboutPage() {
           <ul>
             <li>
               Dvorana i termini:{" "}
-              <Link href="/schedule" className="font-medium text-[var(--accent)] underline-offset-2 hover:underline">
+              <Link href="/raspored-treninga" className="font-medium text-[var(--accent)] underline-offset-2 hover:underline">
                 Treninzi
               </Link>
               ; za poruke{" "}
-              <Link href="/contact" className="font-medium text-[var(--accent)] underline-offset-2 hover:underline">
+              <Link href="/kontakt" className="font-medium text-[var(--accent)] underline-offset-2 hover:underline">
                 {contactPageLabel}
               </Link>
             </li>

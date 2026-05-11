@@ -1,5 +1,5 @@
 /**
- * src/app/uspjesi/page.tsx — Achievements page (route: /uspjesi)
+ * src/app/rezultati/page.tsx — Achievements page (route: /rezultati)
  *
  * KEY CONCEPTS:
  * - DATA LOADING PATTERN — this page combines two data sources:

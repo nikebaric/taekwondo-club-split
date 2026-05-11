@@ -37,14 +37,14 @@ export default async function Home() {
     {
       title: "Djeca i juniori",
       body: "Fokus, koordinacija i poštovanje — temelji koji ostaju i izvan prostorije za trening.",
-      href: "/programs",
+      href: "/programi",
       src: placeholders.programs.djeca,
       alt: "Djeca na treningu u dvorani Osnovne škole BRDA",
     },
     {
       title: "Odrasli",
       body: "Kondicija, tehnička izvedba i po želji natjecateljski put — termini prilagođeni odraslima.",
-      href: "/programs",
+      href: "/programi",
       src: placeholders.programs.odrasli,
       alt: "Treneri i majstori kluba u doboku na tatamiju",
     },
@@ -85,13 +85,13 @@ export default async function Home() {
                   to perform a client-side navigation — no full page reload.
                   Prefetching happens automatically when the link is in the viewport. */}
               <Link
-                href="/contact"
+                href="/kontakt"
                 className="inline-flex max-w-full items-center justify-center rounded-full bg-[var(--accent)] px-5 py-3.5 text-center text-xs font-semibold leading-snug text-white shadow-[0_0_28px_-6px_var(--accent-glow)] transition hover:brightness-110 active:scale-[0.98] sm:px-6 sm:text-sm"
               >
                 {contactPageLabel}
               </Link>
               <Link
-                href="/programs"
+                href="/programi"
                 className="inline-flex items-center justify-center rounded-full border border-white/30 bg-white/[0.09] px-6 py-3.5 text-sm font-semibold text-white shadow-sm backdrop-blur-md transition hover:bg-white/[0.16] active:scale-[0.98]"
               >
                 Pregled programa
@@ -99,7 +99,7 @@ export default async function Home() {
             </div>
           </div>
           <Link
-            href="/uspjesi"
+            href="/rezultati"
             aria-label="Rezultati — medalje i pojedinačni plasmani"
             className="group block w-full max-w-md rounded-2xl border border-white/70 bg-white/[0.97] p-7 shadow-[var(--shadow-card-hover)] ring-1 ring-slate-900/[0.06] backdrop-blur-md transition hover:ring-2 hover:ring-[var(--accent)]/35 lg:w-auto"
           >
@@ -228,11 +228,11 @@ export default async function Home() {
             <div className="mt-4 h-px w-14 bg-gradient-to-r from-transparent via-[var(--brand-gold)]/45 to-transparent lg:mx-0" aria-hidden />
             <p className="mt-6 leading-relaxed text-[var(--muted)]">
               Svakodnevno vršimo upise djece i odraslih. Trening se odvija u dvorani u Osnovnoj školi „BRDA“.               Za više informacija pogledajte{" "}
-              <Link href="/contact" className="font-medium text-[var(--accent)] underline-offset-2 hover:underline">
+              <Link href="/kontakt" className="font-medium text-[var(--accent)] underline-offset-2 hover:underline">
                 {contactPageLabel}
               </Link>
               , a adresu dvorane i raspored na{" "}
-              <Link href="/schedule" className="font-medium text-[var(--accent)] underline-offset-2 hover:underline">
+              <Link href="/raspored-treninga" className="font-medium text-[var(--accent)] underline-offset-2 hover:underline">
                 Treninzi
               </Link>
               .
@@ -250,13 +250,13 @@ export default async function Home() {
             </div>
             <div className="mt-8 flex flex-wrap gap-4">
               <Link
-                href="/contact"
+                href="/kontakt"
                 className="inline-flex shrink-0 items-center justify-center rounded-full bg-[var(--accent)] px-6 py-3 text-center text-xs font-semibold leading-snug text-white shadow-[0_0_24px_-6px_var(--accent-glow)] transition hover:brightness-110 sm:px-8 sm:text-sm"
               >
                 {contactPageLabel}
               </Link>
               <Link
-                href="/schedule"
+                href="/raspored-treninga"
                 className="inline-flex shrink-0 items-center justify-center rounded-full border border-slate-300 bg-white px-8 py-3 text-sm font-semibold text-slate-800 shadow-sm transition hover:bg-slate-50"
               >
                 Treninzi
@@ -283,7 +283,7 @@ export default async function Home() {
               return (
                 <li key={post.id}>
                   <Link
-                    href={`/news/${post.slug}`}
+                    href={`/novosti/${post.slug}`}
                     className="group block overflow-hidden rounded-2xl border border-slate-200 bg-[var(--surface)] shadow-[var(--shadow-card)] transition-all duration-300 hover:-translate-y-1 hover:border-[var(--accent)]/35 hover:shadow-[var(--shadow-card-hover)]"
                   >
                     <div className="relative aspect-[16/10] bg-slate-200">

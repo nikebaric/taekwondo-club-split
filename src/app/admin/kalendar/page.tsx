@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 
 export default async function AdminKalendarPage() {
   if (!(await isAdminSession())) {
-    redirect("/login?next=/admin/kalendar");
+    redirect("/prijava?next=/admin/kalendar");
   }
 
   const events = [...(await readCalendarEvents())].sort(

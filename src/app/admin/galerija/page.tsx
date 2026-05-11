@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 export default async function AdminGalerijaPage() {
   const session = await getMemberSession();
   if (!session) {
-    redirect("/login?next=/admin/galerija");
+    redirect("/prijava?next=/admin/galerija");
   }
   if (!(await isGalleryAdminSession())) {
     return (

@@ -18,7 +18,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function AdminKalendarEditPage({ params }: Props) {
   if (!(await isAdminSession())) {
     const { id } = await params;
-    redirect(`/login?next=${encodeURIComponent(`/admin/kalendar/${id}`)}`);
+    redirect(`/prijava?next=${encodeURIComponent(`/admin/kalendar/${id}`)}`);
   }
 
   const { id } = await params;
