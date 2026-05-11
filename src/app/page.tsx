@@ -283,7 +283,7 @@ export default async function Home() {
               return (
                 <li key={post.id}>
                   <Link
-                    href={`/novosti/${post.slug}`}
+                    href={`/portal-novosti/${post.slug}`}
                     className="group block overflow-hidden rounded-2xl border border-slate-200 bg-[var(--surface)] shadow-[var(--shadow-card)] transition-all duration-300 hover:-translate-y-1 hover:border-[var(--accent)]/35 hover:shadow-[var(--shadow-card-hover)]"
                   >
                     <div className="relative aspect-[16/10] bg-slate-200">

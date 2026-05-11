@@ -249,8 +249,8 @@ export async function POST(request: Request) {
   // Invalidate the Next.js page cache so the new post appears immediately.
   // Without this, users would see stale cached pages until the cache expires.
   revalidatePath("/");
-  revalidatePath("/novosti");
-  revalidatePath(`/novosti/${slug}`);
+  revalidatePath("/portal-novosti");
+  revalidatePath(`/portal-novosti/${slug}`);
 
   return Response.json({ ok: true, slug });
 }

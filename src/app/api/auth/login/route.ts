@@ -30,7 +30,7 @@ export async function POST(request: Request) {
       {
         ok: false,
         error:
-          "Postavite barem jedan par ADMIN_EMAIL/ADMIN_PASSWORD ili ADMIN2_EMAIL/ADMIN2_PASSWORD u .env. Pogledajte .env.example.",
+          "Postavite barem jedan par ADMIN_EMAIL/ADMIN_PASSWORD_HASH ili ADMIN2_EMAIL/ADMIN2_PASSWORD_HASH u .env. Pogledajte .env.example.",
       },
       { status: 503 },
     );
@@ -54,8 +54,11 @@ export async function POST(request: Request) {
   const email = typeof b.email === "string" ? b.email : "";
   const password = typeof b.password === "string" ? b.password : "";
 
-  // Attempt to match credentials against configured admin accounts
-  const match = matchClubAdmin(email, password);
+  // DEBUG — remove after testing
+  console.log("[login] HASH1:", JSON.stringify(process.env.ADMIN_PASSWORD_HASH?.slice(0, 10)));
+  console.log("[login] HASH2:", JSON.stringify(process.env.ADMIN2_PASSWORD_HASH?.slice(0, 10)));
+
+  const match = await matchClubAdmin(email, password);
   if (!match) {
     return NextResponse.json({ ok: false, error: "Neispravan e-mail ili lozinka." }, { status: 401 });
   }

@@ -132,7 +132,7 @@ export function AdminNewsForm({
       // router.push() does client-side navigation to the new article.
       // router.refresh() tells Next.js to re-fetch all Server Component data on the
       // current (and navigated-to) page, ensuring fresh content from the server.
-      router.push(`/novosti/${data.slug}`);
+      router.push(`/portal-novosti/${data.slug}`);
       router.refresh();
     } catch {
       setError("Mrežna greška. Pokušajte ponovno.");

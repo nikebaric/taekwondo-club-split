@@ -34,7 +34,7 @@ export function ArticleAdminToolbar({ slug }: Props) {
     }
     // Full page navigation (not router.push) ensures the server re-renders
     // the news list without the deleted article.
-    window.location.assign("/novosti");
+    window.location.assign("/portal-novosti");
   }
 
   return (

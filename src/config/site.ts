@@ -158,7 +158,7 @@ export const nav = [
   { href: "/raspored-treninga", label: "Treninzi" },
   { href: "/natjecanja-seminari", label: "Natjecanja i seminari" },
   { href: "/rezultati", label: "Rezultati" },
-  { href: "/novosti", label: "Portal" },
+  { href: "/portal-novosti", label: "Portal" },
   { href: "/galerija", label: "Galerija" },
   { href: "/kontakt", label: contactPageLabel },
 ] as const;
