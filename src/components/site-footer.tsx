@@ -117,7 +117,7 @@ export function SiteFooter() {
                 target="_blank"
                 rel="noopener noreferrer"
                 className="block text-slate-700 transition hover:opacity-80"
-                
+                title="Facebook"
               >
                 <FacebookLogo className="h-10 w-10 sm:h-11 sm:w-11" />
               </a>
@@ -167,11 +167,12 @@ export function SiteFooter() {
           the copyright year always current without any client-side JavaScript. */}
       <div className="border-t border-slate-200/80 px-4 py-6 text-center text-xs text-slate-500 sm:px-6">
         <p>© {new Date().getFullYear()} {site.name}. Sva prava pridržana.</p>
-        <p className="mx-auto mt-3 max-w-lg text-sm leading-relaxed tracking-wide text-slate-600">
-          <span className="font-semibold text-slate-800">Izrada web stranice</span>{" "}
-          <span className="text-slate-500">by</span> Niko Barić, član Taekwondo kluba Split.
+        <p className="mx-auto mt-3 max-w-lg text-sm leading-relaxed text-slate-600">
+          <span className="font-semibold text-slate-800">Stranicu izradio:</span>{" "}
+          Niko Barić, član Taekwondo kluba Split.
         </p>
         <p className="mx-auto mt-1.5 max-w-lg text-sm text-slate-600">
+          <span className="font-semibold text-slate-800">Kontakt email:</span>{" "}
           <a
             href="mailto:nikebaric@gmail.com"
             className="font-medium text-[var(--accent)] underline decoration-[var(--accent)]/35 underline-offset-[3px] transition hover:decoration-[var(--accent)]"

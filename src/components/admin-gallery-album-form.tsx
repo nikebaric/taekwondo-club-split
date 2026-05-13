@@ -21,8 +21,22 @@
 
 import { useRouter } from "next/navigation";
 import { AdminBackNav } from "@/components/admin-back-nav";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { GalleryAlbum, GalleryItem } from "@/config/gallery";
+import { parseGalleryYoutubeField } from "@/lib/gallery-youtube-lines";
+
+const MAX_GALLERY_ITEM_CAPTION = 400;
+
+type LayoutSlot =
+  | { kind: "existing"; index: number }
+  | { kind: "newFile"; fileIndex: number }
+  | { kind: "newYoutube"; ytIndex: number };
+
+function slotToToken(s: LayoutSlot): string {
+  if (s.kind === "existing") return `e${s.index}`;
+  if (s.kind === "newFile") return `f${s.fileIndex}`;
+  return `y${s.ytIndex}`;
+}
 
 function itemKindLabel(item: GalleryItem): string {
   if (item.kind === "image") return "Slika";
@@ -46,29 +60,183 @@ export function AdminGalleryAlbumForm({ mode, editSlug, initialAlbum }: AdminGal
   const router = useRouter();
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  // Using a Set for O(1) lookups: .has(idx) is instant regardless of how many items.
-  // Initialized with `new Set()` (empty) — items are added/removed via toggleRemove.
   const [removeSet, setRemoveSet] = useState<Set<number>>(new Set());
+  const removeSetRef = useRef(removeSet);
+  removeSetRef.current = removeSet;
 
-  // Functional update pattern: `prev =>` receives the current state value.
-  // This avoids stale closure issues when toggling rapidly.
+  const initialItemCount = initialAlbum?.items?.length ?? 0;
+  const hasExistingLayoutMode = mode === "edit" && initialItemCount > 0;
+
+  const [layoutSlots, setLayoutSlots] = useState<LayoutSlot[]>(() =>
+    initialAlbum?.items?.length
+      ? initialAlbum.items.map((_, i) => ({ kind: "existing" as const, index: i }))
+      : [],
+  );
+
+  const [mediaQueue, setMediaQueue] = useState<File[]>([]);
+  const [youtubeText, setYoutubeText] = useState("");
+  const [orderTokens, setOrderTokens] = useState<string[]>([]);
+  const lastMediaYoutubeDims = useRef({ n: -1, m: -1 });
+  const [captionByToken, setCaptionByToken] = useState<Record<string, string>>({});
+
+  const ytParsed = useMemo(() => parseGalleryYoutubeField(youtubeText), [youtubeText]);
+  const nNewFiles = mediaQueue.length;
+  const nNewYoutube = ytParsed.error ? 0 : ytParsed.items.length;
+
+  useEffect(() => {
+    if (mode !== "edit" || !editSlug) return;
+    const caps: Record<string, string> = {};
+    if (initialAlbum?.items?.length) {
+      initialAlbum.items.forEach((it, i) => {
+        caps[`e${i}`] = it.caption ?? "";
+      });
+    }
+    setCaptionByToken(caps);
+    if (initialAlbum?.items?.length) {
+      setLayoutSlots(initialAlbum.items.map((_, i) => ({ kind: "existing" as const, index: i })));
+    } else {
+      setLayoutSlots([]);
+    }
+    setRemoveSet(new Set());
+    setMediaQueue([]);
+    setYoutubeText("");
+  }, [editSlug, mode, initialAlbum?.items?.length]);
+
+  useEffect(() => {
+    if (!hasExistingLayoutMode) return;
+    setLayoutSlots((prev) => {
+      const existingSlots = prev.filter((s) => s.kind === "existing");
+      const fileSlots = mediaQueue.map((_, fi) => ({ kind: "newFile" as const, fileIndex: fi }));
+      const ytSlots = Array.from({ length: nNewYoutube }, (_, j) => ({ kind: "newYoutube" as const, ytIndex: j }));
+      return [...existingSlots, ...fileSlots, ...ytSlots];
+    });
+  }, [hasExistingLayoutMode, nNewFiles, nNewYoutube]);
+
+  useEffect(() => {
+    if (hasExistingLayoutMode) return;
+    if (lastMediaYoutubeDims.current.n === nNewFiles && lastMediaYoutubeDims.current.m === nNewYoutube) return;
+    lastMediaYoutubeDims.current = { n: nNewFiles, m: nNewYoutube };
+    setOrderTokens([
+      ...Array.from({ length: nNewFiles }, (_, i) => `f${i}`),
+      ...Array.from({ length: nNewYoutube }, (_, i) => `y${i}`),
+    ]);
+  }, [hasExistingLayoutMode, nNewFiles, nNewYoutube]);
+
   const toggleRemove = (idx: number) => {
+    const willMark = !removeSetRef.current.has(idx);
     setRemoveSet((prev) => {
       const next = new Set(prev);
-      if (next.has(idx)) next.delete(idx);
-      else next.add(idx);
+      if (willMark) next.add(idx);
+      else next.delete(idx);
       return next;
     });
+    if (!hasExistingLayoutMode) return;
+    setLayoutSlots((slots) =>
+      willMark
+        ? slots.filter((s) => !(s.kind === "existing" && s.index === idx))
+        : slots.some((s) => s.kind === "existing" && s.index === idx)
+          ? slots
+          : [...slots, { kind: "existing" as const, index: idx }],
+    );
   };
 
-  // useMemo: only recomputes the CSV string when removeSet changes.
   const removeIndicesCsv = useMemo(() => [...removeSet].sort((a, b) => a - b).join(","), [removeSet]);
+
+  function slotLabel(slot: LayoutSlot): string {
+    if (slot.kind === "existing" && initialAlbum?.items[slot.index]) {
+      return itemPreview(initialAlbum.items[slot.index]!);
+    }
+    if (slot.kind === "newFile") {
+      const f = mediaQueue[slot.fileIndex];
+      return f ? f.name : `Datoteka ${slot.fileIndex + 1}`;
+    }
+    if (slot.kind === "newYoutube") {
+      const y = ytParsed.items[slot.ytIndex];
+      return y ? y.title : `YouTube ${slot.ytIndex + 1}`;
+    }
+    return "";
+  }
+
+  function slotKindShort(slot: LayoutSlot): string {
+    if (slot.kind === "existing" && initialAlbum?.items[slot.index]) {
+      return itemKindLabel(initialAlbum.items[slot.index]!);
+    }
+    if (slot.kind === "newFile") return "Nova datoteka";
+    if (slot.kind === "newYoutube") return "Novi YouTube";
+    return "";
+  }
+
+  function moveLayoutSlot(listIndex: number, dir: -1 | 1) {
+    setLayoutSlots((prev) => {
+      const j = listIndex + dir;
+      if (j < 0 || j >= prev.length) return prev;
+      const next = [...prev];
+      const t = next[listIndex]!;
+      next[listIndex] = next[j]!;
+      next[j] = t;
+      return next;
+    });
+  }
+
+  function tokenLabel(token: string): string {
+    if (/^f\d+$/.test(token)) {
+      const i = parseInt(token.slice(1), 10);
+      const f = mediaQueue[i];
+      return f ? f.name : token;
+    }
+    if (/^y\d+$/.test(token)) {
+      const i = parseInt(token.slice(1), 10);
+      const y = ytParsed.items[i];
+      return y ? y.title : token;
+    }
+    return token;
+  }
+
+  function setCaptionToken(token: string, value: string) {
+    const v = value.slice(0, MAX_GALLERY_ITEM_CAPTION);
+    setCaptionByToken((prev) => ({ ...prev, [token]: v }));
+  }
+
+  function moveOrderToken(index: number, dir: -1 | 1) {
+    setOrderTokens((prev) => {
+      const j = index + dir;
+      if (j < 0 || j >= prev.length) return prev;
+      const next = [...prev];
+      const t = next[index]!;
+      next[index] = next[j]!;
+      next[j] = t;
+      return next;
+    });
+  }
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError(null);
     const form = e.currentTarget;
+    if (youtubeText.trim().length > 0 && ytParsed.error) {
+      setError(ytParsed.error);
+      return;
+    }
+    if (hasExistingLayoutMode && layoutSlots.length === 0) {
+      setError("Album mora imati barem jednu stavku.");
+      return;
+    }
+
     const fd = new FormData(form);
+    fd.set("youtube", youtubeText);
+    for (const file of mediaQueue) {
+      fd.append("media", file);
+    }
+    if (hasExistingLayoutMode) {
+      fd.set("album_item_order", JSON.stringify(layoutSlots.map(slotToToken)));
+      fd.set(
+        "album_item_captions",
+        JSON.stringify(layoutSlots.map((s) => (captionByToken[slotToToken(s)] ?? "").trim())),
+      );
+    } else if (orderTokens.length > 0) {
+      fd.set("item_order", JSON.stringify(orderTokens));
+      fd.set("new_item_captions", JSON.stringify(orderTokens.map((t) => (captionByToken[t] ?? "").trim())));
+    }
 
     if (mode === "edit") {
       fd.set("remove_indices", removeIndicesCsv);
@@ -125,8 +293,6 @@ export function AdminGalleryAlbumForm({ mode, editSlug, initialAlbum }: AdminGal
   const submitLabel =
     mode === "edit" ? (pending ? "Spremam…" : "Spremi album") : pending ? "Stvaram album…" : "Stvori album";
 
-  const items = initialAlbum?.items ?? [];
-
   return (
     <form onSubmit={onSubmit} className="space-y-6">
       <div>
@@ -156,115 +322,30 @@ export function AdminGalleryAlbumForm({ mode, editSlug, initialAlbum }: AdminGal
           className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-slate-900 shadow-sm outline-none ring-[var(--accent)]/30 focus:border-[var(--accent)] focus:ring-2"
         />
       </div>
+
       <div>
-        <label htmlFor="slug" className="block text-sm font-medium text-slate-800">
-          Slug (dio URL-a)
+        <label htmlFor="gallery-media" className="block text-sm font-medium text-slate-800">
+          {mode === "edit" ? "Dodaj slike i/ili video datoteke" : "Slike i video (opcionalno)"}
         </label>
         <p className="mt-1 text-xs text-[var(--muted)]">
-          {mode === "create"
-            ? "Ostavite prazno za automatski iz naslova. Samo mala slova, brojevi i crtice."
-            : "Možete promijeniti URL albuma; ako je zauzet, dodaje se sufiks."}
+          Slike: JPEG, PNG, WebP, GIF (do 12 MB). Video: MP4 ili WebM (do 100 MB). Možete odabrati više odjednom.
+          {hasExistingLayoutMode
+            ? " Redoslijed podesite u odjeljku „Stavke u albumu“ ispod (nakon što dodate datoteke ili YouTube)."
+            : " Redoslijed ispod određuje kako će se miješati s YouTube stavkama."}
         </p>
         <input
-          id="slug"
-          name="slug"
-          maxLength={100}
-          defaultValue={initialAlbum?.slug ?? ""}
-          placeholder={mode === "create" ? "npr. natjecanje-split-2026" : ""}
-          className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 font-mono text-sm text-slate-900 shadow-sm outline-none ring-[var(--accent)]/30 focus:border-[var(--accent)] focus:ring-2"
+          id="gallery-media"
+          type="file"
+          accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm"
+          multiple
+          className="mt-2 block w-full text-sm text-[var(--muted)] file:mr-4 file:rounded-lg file:border-0 file:bg-slate-100 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-slate-800"
+          onChange={(e) => setMediaQueue(Array.from(e.target.files ?? []))}
         />
-      </div>
-      <div className="rounded-xl border border-slate-200 bg-slate-50/80 p-4">
-        <p className="text-sm font-medium text-slate-800">Naslovnica na popisu (opcionalno)</p>
-        <p className="mt-1 text-xs text-[var(--muted)]">Putanja do slike, npr. /galerija/ime.jpg ili /uploads/gallery/…</p>
-        <div className="mt-3 grid gap-3 sm:grid-cols-2">
-          <div>
-            <label htmlFor="cover_src" className="text-xs font-medium text-slate-600">
-              Putanja slike
-            </label>
-            <input
-              id="cover_src"
-              name="cover_src"
-              type="text"
-              defaultValue={initialAlbum?.coverSrc ?? ""}
-              className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 font-mono text-sm text-slate-900"
-            />
-          </div>
-          <div>
-            <label htmlFor="cover_alt" className="text-xs font-medium text-slate-600">
-              Alt tekst
-            </label>
-            <input
-              id="cover_alt"
-              name="cover_alt"
-              type="text"
-              defaultValue={initialAlbum?.coverAlt ?? ""}
-              className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900"
-            />
-          </div>
-        </div>
-        {mode === "edit" && (initialAlbum?.coverSrc || initialAlbum?.coverAlt) ? (
-          <label className="mt-3 flex cursor-pointer items-center gap-2 text-sm text-slate-700">
-            <input type="checkbox" name="clear_cover" className="rounded border-slate-300" />
-            Ukloni prilagođenu naslovnicu (koristit će se prva slika u albumu)
-          </label>
+        {mediaQueue.length > 0 ? (
+          <p className="mt-2 text-xs text-slate-600">
+            Odabrano datoteka: {mediaQueue.length}. Ponovnim odabirom zamjenjujete cijeli skup.
+          </p>
         ) : null}
-      </div>
-
-      {mode === "edit" && items.length > 0 ? (
-        <div>
-          <p className="text-sm font-medium text-slate-800">Stavke u albumu</p>
-          <p className="mt-1 text-xs text-[var(--muted)]">Označite stavke koje želite ukloniti pri spremanju.</p>
-          <ul className="mt-3 max-h-64 space-y-2 overflow-y-auto rounded-lg border border-slate-200 bg-white p-2 text-sm">
-            {items.map((item, idx) => (
-              <li
-                key={`${item.kind}-${idx}-${itemPreview(item).slice(0, 24)}`}
-                className="flex items-start gap-2 rounded-md px-2 py-1.5 hover:bg-slate-50"
-              >
-                <input
-                  type="checkbox"
-                  id={`rm-${idx}`}
-                  checked={removeSet.has(idx)}
-                  onChange={() => toggleRemove(idx)}
-                  className="mt-1 rounded border-slate-300"
-                />
-                <label htmlFor={`rm-${idx}`} className="min-w-0 flex-1 cursor-pointer">
-                  <span className="text-xs font-semibold text-slate-500">{itemKindLabel(item)}</span>{" "}
-                  <span className="break-all text-slate-800">{itemPreview(item)}</span>
-                </label>
-              </li>
-            ))}
-          </ul>
-        </div>
-      ) : null}
-
-      <div>
-        <label htmlFor="images" className="block text-sm font-medium text-slate-800">
-          {mode === "edit" ? "Dodaj slike" : "Slike (opcionalno)"}
-        </label>
-        <p className="mt-1 text-xs text-[var(--muted)]">JPEG, PNG, WebP, GIF, do 12 MB po datoteci.</p>
-        <input
-          id="images"
-          name="images"
-          type="file"
-          accept="image/jpeg,image/png,image/webp,image/gif"
-          multiple
-          className="mt-2 block w-full text-sm text-[var(--muted)] file:mr-4 file:rounded-lg file:border-0 file:bg-slate-100 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-slate-800"
-        />
-      </div>
-      <div>
-        <label htmlFor="videos" className="block text-sm font-medium text-slate-800">
-          {mode === "edit" ? "Dodaj video (MP4 / WebM)" : "Video datoteke (opcionalno)"}
-        </label>
-        <p className="mt-1 text-xs text-[var(--muted)]">Do 100 MB po datoteci.</p>
-        <input
-          id="videos"
-          name="videos"
-          type="file"
-          accept="video/mp4,video/webm"
-          multiple
-          className="mt-2 block w-full text-sm text-[var(--muted)] file:mr-4 file:rounded-lg file:border-0 file:bg-slate-100 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-slate-800"
-        />
       </div>
       <div>
         <label htmlFor="youtube" className="block text-sm font-medium text-slate-800">
@@ -278,10 +359,160 @@ export function AdminGalleryAlbumForm({ mode, editSlug, initialAlbum }: AdminGal
           id="youtube"
           name="youtube"
           rows={4}
+          value={youtubeText}
+          onChange={(e) => setYoutubeText(e.target.value)}
           placeholder={"https://www.youtube.com/watch?v=…\nhttps://youtu.be/… | Moj naslov"}
           className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 font-mono text-sm text-slate-900 shadow-sm outline-none ring-[var(--accent)]/30 focus:border-[var(--accent)] focus:ring-2"
         />
       </div>
+
+      {mode === "edit" && hasExistingLayoutMode ? (
+        <div>
+          <p className="text-sm font-medium text-slate-800">Stavke u albumu</p>
+          <p className="mt-1 text-xs text-[var(--muted)]">
+            Označite postojeće stavke za uklanjanje. Strelicama poredajte sve stavke. Natpis ispod slike/videa prikazuje
+            se na stranici albuma.
+          </p>
+          <ol className="mt-3 max-h-[32rem] space-y-3 overflow-y-auto rounded-lg border border-slate-200 bg-white p-2 text-sm">
+            {layoutSlots.map((slot, li) => {
+              const capToken = slotToToken(slot);
+              const capId = `caption-${capToken}-${li}`;
+              return (
+                <li
+                  key={`${slot.kind}-${slot.kind === "existing" ? slot.index : slot.kind === "newFile" ? `f${slot.fileIndex}` : `y${slot.ytIndex}`}-${li}`}
+                  className="rounded-lg border border-slate-100 bg-slate-50/50 px-2 py-2"
+                >
+                  <div className="flex items-start gap-2">
+                    {slot.kind === "existing" ? (
+                      <>
+                        <input
+                          type="checkbox"
+                          id={`rm-${slot.index}`}
+                          checked={removeSet.has(slot.index)}
+                          onChange={() => toggleRemove(slot.index)}
+                          className="mt-0.5 shrink-0 rounded border-slate-300"
+                        />
+                        <label htmlFor={`rm-${slot.index}`} className="min-w-0 flex-1 cursor-pointer">
+                          <span className="text-xs font-semibold text-slate-500">{slotKindShort(slot)}</span>{" "}
+                          <span className="break-all text-slate-800">{slotLabel(slot)}</span>
+                        </label>
+                      </>
+                    ) : (
+                      <div className="min-w-0 flex-1 pl-7">
+                        <span className="text-xs font-semibold text-slate-500">{slotKindShort(slot)}</span>{" "}
+                        <span className="break-all text-slate-800">{slotLabel(slot)}</span>
+                      </div>
+                    )}
+                    {layoutSlots.length > 1 ? (
+                      <div className="flex shrink-0 gap-1">
+                        <button
+                          type="button"
+                          disabled={li === 0}
+                          onClick={() => moveLayoutSlot(li, -1)}
+                          className="rounded-md border border-slate-200 bg-white px-2 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-40"
+                          aria-label="Gore"
+                        >
+                          ↑
+                        </button>
+                        <button
+                          type="button"
+                          disabled={li === layoutSlots.length - 1}
+                          onClick={() => moveLayoutSlot(li, 1)}
+                          className="rounded-md border border-slate-200 bg-white px-2 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-40"
+                          aria-label="Dolje"
+                        >
+                          ↓
+                        </button>
+                      </div>
+                    ) : null}
+                  </div>
+                  <div className="mt-2 border-t border-slate-200/80 pt-2">
+                    <label htmlFor={capId} className="block text-xs font-medium text-slate-600">
+                      Natpis ispod medija
+                    </label>
+                    <input
+                      id={capId}
+                      type="text"
+                      maxLength={MAX_GALLERY_ITEM_CAPTION}
+                      value={captionByToken[capToken] ?? ""}
+                      onChange={(e) => setCaptionToken(capToken, e.target.value)}
+                      placeholder="npr. Frane, Gringo i Neno — majstori kluba"
+                      className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900"
+                    />
+                  </div>
+                </li>
+              );
+            })}
+          </ol>
+        </div>
+      ) : null}
+
+      {!hasExistingLayoutMode && orderTokens.length >= 1 ? (
+        <div className="rounded-xl border border-slate-200 bg-slate-50/80 p-4">
+          <p className="text-sm font-medium text-slate-800">Redoslijed i natpisi novih stavki</p>
+          <p className="mt-1 text-xs text-[var(--muted)]">
+            {orderTokens.length > 1
+              ? "Pomaknite gore/dolje za redoslijed. Natpis ispod medija prikazuje se na stranici albuma."
+              : "Natpis ispod medija (opcionalno) prikazuje se na stranici albuma."}
+          </p>
+          <ol className="mt-3 space-y-3">
+            {orderTokens.map((token, idx) => {
+              const capId = `caption-new-${token}-${idx}`;
+              return (
+                <li
+                  key={`${token}-${idx}`}
+                  className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm"
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="min-w-0 flex-1 truncate text-slate-800" title={tokenLabel(token)}>
+                      <span className="text-xs font-semibold text-slate-500">
+                        {token.startsWith("f") ? "Datoteka" : "YouTube"}
+                      </span>{" "}
+                      {tokenLabel(token)}
+                    </span>
+                    {orderTokens.length > 1 ? (
+                      <div className="flex shrink-0 gap-1">
+                        <button
+                          type="button"
+                          disabled={idx === 0}
+                          onClick={() => moveOrderToken(idx, -1)}
+                          className="rounded-md border border-slate-200 px-2 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-40"
+                          aria-label="Gore"
+                        >
+                          ↑
+                        </button>
+                        <button
+                          type="button"
+                          disabled={idx === orderTokens.length - 1}
+                          onClick={() => moveOrderToken(idx, 1)}
+                          className="rounded-md border border-slate-200 px-2 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-40"
+                          aria-label="Dolje"
+                        >
+                          ↓
+                        </button>
+                      </div>
+                    ) : null}
+                  </div>
+                  <div className="mt-2 border-t border-slate-100 pt-2">
+                    <label htmlFor={capId} className="block text-xs font-medium text-slate-600">
+                      Natpis ispod medija
+                    </label>
+                    <input
+                      id={capId}
+                      type="text"
+                      maxLength={MAX_GALLERY_ITEM_CAPTION}
+                      value={captionByToken[token] ?? ""}
+                      onChange={(e) => setCaptionToken(token, e.target.value)}
+                      placeholder="npr. Treneri na treningu"
+                      className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900"
+                    />
+                  </div>
+                </li>
+              );
+            })}
+          </ol>
+        </div>
+      ) : null}
 
       {error ? (
         <p className="text-sm text-red-600" role="alert">

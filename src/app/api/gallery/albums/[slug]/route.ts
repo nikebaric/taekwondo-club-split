@@ -14,12 +14,12 @@
  * - **Cleanup on DELETE**: When deleting an entire album, all associated uploaded files
  *   (images and videos) are removed from disk to prevent orphaned files.
  */
-import { mkdir, unlink, writeFile } from "fs/promises";
+import { unlink } from "fs/promises";
 import { join } from "path";
-import { randomUUID } from "crypto";
 import { revalidatePath } from "next/cache";
-import type { GalleryAlbum, GalleryImage, GalleryItem, GalleryVideoFile, GalleryYouTube } from "@/config/gallery";
+import type { GalleryAlbum, GalleryItem } from "@/config/gallery";
 import { isGalleryManagedUpload } from "@/lib/gallery-upload-path";
+import { buildAlbumItemsFromPatchLayout, buildOrderedGalleryItemsFromForm } from "@/lib/gallery-ordered-media";
 import {
   deleteGalleryAlbumBySlug,
   findGalleryAlbumBySlug,
@@ -29,21 +29,8 @@ import {
 } from "@/lib/gallery-store";
 import { isGalleryAdminSession } from "@/lib/auth-check";
 import { slugify } from "@/lib/slug";
-import { parseYoutubeEmbedUrl } from "@/lib/youtube-embed";
 
 export const runtime = "nodejs";
-
-const IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp", "image/gif"]);
-const VIDEO_TYPES = new Set(["video/mp4", "video/webm"]);
-const MAX_IMAGE_BYTES = 12 * 1024 * 1024;
-const MAX_VIDEO_BYTES = 100 * 1024 * 1024;
-const MAX_IMAGE_COUNT = 48;
-const MAX_VIDEO_COUNT = 16;
-
-function safeBaseName(name: string): string {
-  const base = name.replace(/[^a-zA-Z0-9._-]/g, "_").slice(0, 120);
-  return base.length > 0 ? base : "datoteka";
-}
 
 async function unlinkPublicUpload(rel: string | null | undefined) {
   if (!rel?.startsWith("/uploads/")) return;
@@ -53,32 +40,6 @@ async function unlinkPublicUpload(rel: string | null | undefined) {
   } catch {
     /* ignore */
   }
-}
-
-function parseYoutubeLines(raw: string): { items: GalleryYouTube[]; error?: string } {
-  const lines = raw
-    .split(/\r?\n/)
-    .map((s) => s.trim())
-    .filter(Boolean);
-  const items: GalleryYouTube[] = [];
-  for (const line of lines) {
-    const pipe = line.indexOf("|");
-    const urlPart = pipe >= 0 ? line.slice(0, pipe).trim() : line;
-    const titlePart = pipe >= 0 ? line.slice(pipe + 1).trim() : "";
-    const embedUrl = parseYoutubeEmbedUrl(urlPart);
-    if (!embedUrl) {
-      return {
-        items: [],
-        error: `Neispravan YouTube link: ${urlPart.slice(0, 56)}${urlPart.length > 56 ? "…" : ""}`,
-      };
-    }
-    items.push({
-      kind: "youtube",
-      embedUrl,
-      title: titlePart.length > 0 ? titlePart : "YouTube video",
-    });
-  }
-  return { items };
 }
 
 /**
@@ -118,7 +79,6 @@ export async function PATCH(request: Request, ctx: RouteCtx) {
   const title = String(form.get("title") ?? "").trim();
   const description = String(form.get("description") ?? "").trim();
   const slugOverride = String(form.get("slug") ?? "").trim();
-  const youtubeRaw = String(form.get("youtube") ?? "").trim();
   const removeRaw = String(form.get("remove_indices") ?? "").trim();
   const clearCover = form.get("clear_cover") === "on";
 
@@ -129,67 +89,15 @@ export async function PATCH(request: Request, ctx: RouteCtx) {
     return Response.json({ ok: false, error: "Opis mora imati 1–4000 znakova." }, { status: 400 });
   }
 
-  const ytParsed = parseYoutubeLines(youtubeRaw);
-  if (ytParsed.error) {
-    return Response.json({ ok: false, error: ytParsed.error }, { status: 400 });
-  }
-
-  const imageFields = form.getAll("images");
-  const videoFields = form.getAll("videos");
-  const imageFiles = imageFields.filter((x): x is File => x instanceof File && x.size > 0);
-  const videoFiles = videoFields.filter((x): x is File => x instanceof File && x.size > 0);
-
-  if (imageFiles.length > MAX_IMAGE_COUNT) {
-    return Response.json({ ok: false, error: `Najviše ${MAX_IMAGE_COUNT} slika odjednom.` }, { status: 400 });
-  }
-  if (videoFiles.length > MAX_VIDEO_COUNT) {
-    return Response.json({ ok: false, error: `Najviše ${MAX_VIDEO_COUNT} video zapisa odjednom.` }, { status: 400 });
-  }
-
-  for (const imageFile of imageFiles) {
-    if (!IMAGE_TYPES.has(imageFile.type)) {
-      return Response.json(
-        { ok: false, error: "Svaka slika mora biti JPEG, PNG, WebP ili GIF." },
-        { status: 400 },
-      );
-    }
-    if (imageFile.size > MAX_IMAGE_BYTES) {
-      return Response.json({ ok: false, error: "Jedna od slika je prevelika (max 12 MB)." }, { status: 400 });
-    }
-  }
-
-  for (const videoFile of videoFiles) {
-    if (!VIDEO_TYPES.has(videoFile.type)) {
-      return Response.json({ ok: false, error: "Video mora biti MP4 ili WebM." }, { status: 400 });
-    }
-    if (videoFile.size > MAX_VIDEO_BYTES) {
-      return Response.json({ ok: false, error: "Jedan od video zapisa je prevelik (max 100 MB)." }, { status: 400 });
-    }
-  }
-
   const removeSet = parseRemoveIndices(removeRaw);
 
-  // Start with the existing items, then filter out removed ones
-  let items: GalleryItem[] = [...existing.items];
   const removedForUnlink: GalleryItem[] = [];
-
-  // Filter by index: items at indices in `removeSet` are collected for file deletion,
-  // while the rest are kept
   if (removeSet.size > 0) {
-    const next: GalleryItem[] = [];
-    items.forEach((item, idx) => {
-      if (removeSet.has(idx)) {
-        removedForUnlink.push(item);
-      } else {
-        next.push(item);
-      }
+    existing.items.forEach((item, idx) => {
+      if (removeSet.has(idx)) removedForUnlink.push(item);
     });
-    items = next;
   }
 
-  // Delete files from disk, but only for managed uploads (files we uploaded, not
-  // external URLs or pre-seeded static assets). This safety check prevents
-  // accidental deletion of files that belong to the codebase.
   for (const item of removedForUnlink) {
     if (item.kind === "image" || item.kind === "videoFile") {
       if (isGalleryManagedUpload(item.src)) await unlinkPublicUpload(item.src);
@@ -197,49 +105,42 @@ export async function PATCH(request: Request, ctx: RouteCtx) {
   }
 
   const uploadDir = join(process.cwd(), "public", "uploads", "gallery");
-  await mkdir(uploadDir, { recursive: true });
+  const rawAlbumOrder = String(form.get("album_item_order") ?? "").trim();
 
-  // Append new images after existing ones
-  let imgIdx = items.filter((i) => i.kind === "image").length;
-  for (const imageFile of imageFiles) {
-    imgIdx += 1;
-    const ext =
-      imageFile.type === "image/jpeg"
-        ? ".jpg"
-        : imageFile.type === "image/png"
-          ? ".png"
-          : imageFile.type === "image/webp"
-            ? ".webp"
-            : ".gif";
-    const fileName = `${randomUUID()}-${safeBaseName(imageFile.name.replace(/\.[^.]+$/, ""))}${ext}`;
-    const buf = Buffer.from(await imageFile.arrayBuffer());
-    await writeFile(join(uploadDir, fileName), buf);
-    const src = `/uploads/gallery/${fileName}`;
-    const altBase = safeBaseName(imageFile.name.replace(/\.[^.]+$/, ""));
-    const img: GalleryImage = {
-      kind: "image",
-      src,
-      alt: altBase.length > 0 ? altBase.replace(/_/g, " ") : `Fotografija ${imgIdx}`,
-    };
-    items.push(img);
+  let items: GalleryItem[];
+
+  if (rawAlbumOrder.length > 0) {
+    let parsedOrder: unknown;
+    try {
+      parsedOrder = JSON.parse(rawAlbumOrder) as unknown;
+    } catch {
+      return Response.json({ ok: false, error: "Neispravan JSON za redoslijed albuma." }, { status: 400 });
+    }
+    if (!Array.isArray(parsedOrder) || !parsedOrder.every((x) => typeof x === "string")) {
+      return Response.json({ ok: false, error: "Neispravan redoslijed albuma." }, { status: 400 });
+    }
+    const merged = await buildAlbumItemsFromPatchLayout(
+      existing.items,
+      removeSet,
+      form,
+      uploadDir,
+      parsedOrder as string[],
+    );
+    if (merged.error) {
+      return Response.json({ ok: false, error: merged.error }, { status: 400 });
+    }
+    items = merged.items;
+  } else {
+    let kept: GalleryItem[] = [...existing.items];
+    if (removeSet.size > 0) {
+      kept = existing.items.filter((_, idx) => !removeSet.has(idx));
+    }
+    const appended = await buildOrderedGalleryItemsFromForm(form, uploadDir);
+    if (appended.error) {
+      return Response.json({ ok: false, error: appended.error }, { status: 400 });
+    }
+    items = [...kept, ...appended.items];
   }
-
-  for (const videoFile of videoFiles) {
-    const ext = videoFile.type === "video/webm" ? ".webm" : ".mp4";
-    const fileName = `${randomUUID()}-${safeBaseName(videoFile.name.replace(/\.[^.]+$/, ""))}${ext}`;
-    const buf = Buffer.from(await videoFile.arrayBuffer());
-    await writeFile(join(uploadDir, fileName), buf);
-    const src = `/uploads/gallery/${fileName}`;
-    const titleBase = safeBaseName(videoFile.name.replace(/\.[^.]+$/, ""));
-    const vf: GalleryVideoFile = {
-      kind: "videoFile",
-      src,
-      title: titleBase.length > 0 ? titleBase.replace(/_/g, " ") : "Video",
-    };
-    items.push(vf);
-  }
-
-  items.push(...ytParsed.items);
 
   if (items.length === 0) {
     return Response.json(
