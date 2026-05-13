@@ -54,10 +54,6 @@ export async function POST(request: Request) {
   const email = typeof b.email === "string" ? b.email : "";
   const password = typeof b.password === "string" ? b.password : "";
 
-  // DEBUG — remove after testing
-  console.log("[login] HASH1:", JSON.stringify(process.env.ADMIN_PASSWORD_HASH?.slice(0, 10)));
-  console.log("[login] HASH2:", JSON.stringify(process.env.ADMIN2_PASSWORD_HASH?.slice(0, 10)));
-
   const match = await matchClubAdmin(email, password);
   if (!match) {
     return NextResponse.json({ ok: false, error: "Neispravan e-mail ili lozinka." }, { status: 401 });

@@ -71,6 +71,9 @@ export async function updateAchievementById(
   if ("pojas" in patch && patch.pojas === undefined) {
     delete next.pojas;
   }
+  if ("photoSrc" in patch && patch.photoSrc === undefined) {
+    delete next.photoSrc;
+  }
   rows[idx] = next;
   await writeAchievements(rows);
   return rows[idx];

@@ -165,8 +165,20 @@ export function SiteFooter() {
           the year is computed at render time on the server (not in the browser). */}
       {/* new Date().getFullYear() runs on the server at render time, keeping
           the copyright year always current without any client-side JavaScript. */}
-      <div className="border-t border-slate-200/80 py-6 text-center text-xs text-slate-500">
-        © {new Date().getFullYear()} {site.name}. Sva prava pridržana.
+      <div className="border-t border-slate-200/80 px-4 py-6 text-center text-xs text-slate-500 sm:px-6">
+        <p>© {new Date().getFullYear()} {site.name}. Sva prava pridržana.</p>
+        <p className="mx-auto mt-3 max-w-lg text-sm leading-relaxed tracking-wide text-slate-600">
+          <span className="font-semibold text-slate-800">Izrada web stranice</span>{" "}
+          <span className="text-slate-500">by</span> Niko Barić, član Taekwondo kluba Split.
+        </p>
+        <p className="mx-auto mt-1.5 max-w-lg text-sm text-slate-600">
+          <a
+            href="mailto:nikebaric@gmail.com"
+            className="font-medium text-[var(--accent)] underline decoration-[var(--accent)]/35 underline-offset-[3px] transition hover:decoration-[var(--accent)]"
+          >
+            nikebaric@gmail.com
+          </a>
+        </p>
       </div>
     </footer>
   );

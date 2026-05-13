@@ -18,6 +18,7 @@
  */
 "use client";
 
+import Image from "next/image";
 import { useMemo, useState } from "react";
 import {
   ACHIEVEMENT_BELTS,
@@ -85,6 +86,24 @@ function AchievementRowCells({ row }: { row: ClubAchievement }) {
         >
           {disciplineLabel(row.discipline)}
         </span>
+      </td>
+      <td className="px-2 py-2 text-center align-middle sm:px-3 lg:px-4">
+        {row.photoSrc ? (
+          <Image
+            src={row.photoSrc}
+            alt=""
+            width={40}
+            height={40}
+            className="h-10 w-10 rounded-full border border-slate-200 object-cover"
+          />
+        ) : (
+          <div
+            className="flex h-10 w-10 items-center justify-center rounded-full border border-dashed border-slate-200 bg-slate-50 text-xs text-slate-400"
+            aria-hidden
+          >
+            —
+          </div>
+        )}
       </td>
       <td className="min-w-0 break-words px-2 py-3 font-medium text-slate-900 sm:px-3 lg:px-4">
         {row.name}
@@ -267,20 +286,43 @@ export function AchievementsTable({ rows }: { rows: ClubAchievement[] }) {
               key={row.id}
               className="rounded-2xl border border-slate-200 bg-[var(--surface)] p-4 shadow-sm"
             >
-              <div className="flex flex-wrap items-center gap-2">
-                <span
-                  className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ${medalBadgeClass(row.medal)}`}
-                >
-                  {medalLabel(row.medal)}
-                </span>
-                <span
-                  className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ${disciplineBadgeClass(row.discipline)}`}
-                >
-                  {disciplineLabel(row.discipline)}
-                </span>
+              <div className="flex gap-3">
+                {row.photoSrc ? (
+                  <Image
+                    src={row.photoSrc}
+                    alt=""
+                    width={48}
+                    height={48}
+                    className="h-12 w-12 shrink-0 rounded-full border border-slate-200 object-cover"
+                  />
+                ) : (
+                  <div
+                    className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-dashed border-slate-200 bg-slate-50 text-slate-400"
+                    aria-hidden
+                  >
+                    —
+                  </div>
+                )}
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span
+                      className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ${medalBadgeClass(row.medal)}`}
+                    >
+                      {medalLabel(row.medal)}
+                    </span>
+                    <span
+                      className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ${disciplineBadgeClass(row.discipline)}`}
+                    >
+                      {disciplineLabel(row.discipline)}
+                    </span>
+                  </div>
+                  <p className="mt-2 text-xs font-semibold uppercase tracking-wider text-slate-500">
+                    Ime i prezime
+                  </p>
+                  <p className="mt-0.5 font-medium text-slate-900">{row.name}</p>
+                  <p className="mt-1 text-sm text-slate-700">{row.competition}</p>
+                </div>
               </div>
-              <p className="mt-3 font-medium text-slate-900">{row.name}</p>
-              <p className="mt-1 text-sm text-slate-700">{row.competition}</p>
               <dl className="mt-3 grid gap-1.5 text-sm text-slate-600">
                 <div className="flex flex-wrap gap-x-2 gap-y-0.5">
                   <dt className="font-medium text-slate-500">Datum</dt>
@@ -309,20 +351,21 @@ export function AchievementsTable({ rows }: { rows: ClubAchievement[] }) {
         <table className="w-full table-fixed border-collapse text-left text-xs lg:text-sm">
           <thead className="border-b border-slate-200 bg-slate-50 text-[10px] uppercase tracking-wider text-slate-500 lg:text-xs">
             <tr>
-              <th className="w-[9%] py-3 pl-3 pr-1 font-semibold lg:py-4 lg:pl-4">Medalja</th>
-              <th className="w-[10%] px-1 py-3 font-semibold lg:px-2 lg:py-4">Disciplina</th>
-              <th className="w-[14%] px-1 py-3 font-semibold lg:px-2 lg:py-4">Ime</th>
-              <th className="w-[22%] px-1 py-3 font-semibold lg:px-2 lg:py-4">Natjecanje</th>
-              <th className="w-[11%] px-1 py-3 font-semibold lg:px-2 lg:py-4">Datum</th>
-              <th className="w-[11%] px-1 py-3 font-semibold lg:px-2 lg:py-4">Dobna sk.</th>
-              <th className="w-[13%] px-1 py-3 font-semibold lg:px-2 lg:py-4">Kategorija</th>
+              <th className="w-[8%] py-3 pl-3 pr-1 font-semibold lg:py-4 lg:pl-4">Medalja</th>
+              <th className="w-[9%] px-1 py-3 font-semibold lg:px-2 lg:py-4">Disciplina</th>
+              <th className="w-[7%] px-1 py-3 text-center font-semibold lg:px-2 lg:py-4">Slika</th>
+              <th className="w-[15%] px-1 py-3 font-semibold lg:px-2 lg:py-4">Ime i prezime</th>
+              <th className="w-[20%] px-1 py-3 font-semibold lg:px-2 lg:py-4">Natjecanje</th>
+              <th className="w-[10%] px-1 py-3 font-semibold lg:px-2 lg:py-4">Datum</th>
+              <th className="w-[10%] px-1 py-3 font-semibold lg:px-2 lg:py-4">Dobna sk.</th>
+              <th className="w-[11%] px-1 py-3 font-semibold lg:px-2 lg:py-4">Kategorija</th>
               <th className="w-[10%] py-3 pl-1 pr-3 font-semibold lg:py-4 lg:pr-4">Pojas</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-200">
             {filtered.length === 0 ? (
               <tr>
-                <td colSpan={8} className="px-4 py-10 text-center text-[var(--muted)]">
+                <td colSpan={9} className="px-4 py-10 text-center text-[var(--muted)]">
                   Nema rezultata za odabrane filtere.
                 </td>
               </tr>

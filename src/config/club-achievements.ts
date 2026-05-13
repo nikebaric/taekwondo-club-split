@@ -21,26 +21,16 @@ export type AchievementAgeGroup = "seniori" | "juniori" | "kadeti";
 
 export type AchievementDiscipline = "forme" | "borbe";
 
-/** ITF / club belt palette for displaying results */
-export type AchievementBelt =
-  | "bijeli"
-  | "zuti"
-  | "narancasti"
-  | "zeleni"
-  | "plavi"
-  | "ljubicasti"
-  | "crveni"
-  | "crni";
+/** Club belt palette for results (ITF-style progression without orange/purple in this list). */
+export type AchievementBelt = "bijeli" | "zuti" | "zeleni" | "plavi" | "crveni" | "crni";
 
 // `readonly T[]` means this array cannot be mutated (no push, pop, splice).
 // Combined with `as const`, TS knows the exact tuple of belt values.
 export const ACHIEVEMENT_BELTS: readonly AchievementBelt[] = [
   "bijeli",
   "zuti",
-  "narancasti",
   "zeleni",
   "plavi",
-  "ljubicasti",
   "crveni",
   "crni",
 ] as const;
@@ -52,10 +42,8 @@ export function pojasLabel(b: AchievementBelt): string {
   const m: Record<AchievementBelt, string> = {
     bijeli: "Bijeli",
     zuti: "Žuti",
-    narancasti: "Narančasti",
     zeleni: "Zeleni",
     plavi: "Plavi",
-    ljubicasti: "Ljubičasti",
     crveni: "Crveni",
     crni: "Crni",
   };
@@ -74,4 +62,6 @@ export type ClubAchievement = {
   /** Competition category (e.g. weight class, height) — free text */
   kategorija?: string;
   pojas?: AchievementBelt;
+  /** Public URL of member photo, e.g. `/uploads/achievements/uuid-….jpg` */
+  photoSrc?: string;
 };

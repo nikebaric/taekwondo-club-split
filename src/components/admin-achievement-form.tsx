@@ -19,13 +19,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import type {
-  AchievementAgeGroup,
-  AchievementBelt,
-  AchievementDiscipline,
-  AchievementMedal,
-  ClubAchievement,
-} from "@/config/club-achievements";
+import type { ClubAchievement } from "@/config/club-achievements";
 import { ACHIEVEMENT_BELTS, pojasLabel } from "@/config/club-achievements";
 
 const inputClass =
@@ -51,33 +45,6 @@ export function AdminAchievementForm(props: Props) {
     setError(null);
     const fd = new FormData(e.currentTarget);
 
-    const medal = String(fd.get("medal") ?? "") as AchievementMedal;
-    const discipline = String(fd.get("discipline") ?? "") as AchievementDiscipline;
-    const name = String(fd.get("name") ?? "").trim();
-    const competition = String(fd.get("competition") ?? "").trim();
-    const date = String(fd.get("date") ?? "").trim();
-    const ageRaw = String(fd.get("ageGroup") ?? "").trim();
-    const kategorijaRaw = String(fd.get("kategorija") ?? "").trim();
-    const pojasRaw = String(fd.get("pojas") ?? "").trim();
-
-    const payload: Record<string, unknown> = {
-      medal,
-      discipline,
-      name,
-      competition,
-      date,
-    };
-
-    if (props.mode === "create") {
-      if (ageRaw !== "") payload.ageGroup = ageRaw as AchievementAgeGroup;
-      if (kategorijaRaw !== "") payload.kategorija = kategorijaRaw;
-      if (pojasRaw !== "") payload.pojas = pojasRaw as AchievementBelt;
-    } else {
-      payload.ageGroup = ageRaw === "" ? null : ageRaw;
-      payload.kategorija = kategorijaRaw === "" ? null : kategorijaRaw;
-      payload.pojas = pojasRaw === "" ? null : pojasRaw;
-    }
-
     setPending(true);
     try {
       const url =
@@ -85,8 +52,7 @@ export function AdminAchievementForm(props: Props) {
       const method = props.mode === "create" ? "POST" : "PATCH";
       const res = await fetch(url, {
         method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        body: fd,
       });
       const body = (await res.json()) as { ok?: boolean; error?: string };
       if (!res.ok || !body.ok) {
@@ -103,7 +69,7 @@ export function AdminAchievementForm(props: Props) {
   }
 
   return (
-    <form onSubmit={onSubmit} className="space-y-6">
+    <form encType="multipart/form-data" onSubmit={onSubmit} className="space-y-6">
       <div className="grid gap-6 sm:grid-cols-2">
         <label className="block space-y-2">
           <span className="text-xs font-medium uppercase tracking-wider text-slate-500">Medalja</span>
@@ -141,6 +107,31 @@ export function AdminAchievementForm(props: Props) {
           className={inputClass}
         />
       </label>
+      <div className="space-y-2">
+        <span className="block text-xs font-medium uppercase tracking-wider text-slate-500">
+          Fotografija člana (opcionalno, do 2 MB)
+        </span>
+        <input
+          name="photo"
+          type="file"
+          accept="image/jpeg,image/png,image/webp,image/gif"
+          className={`${inputClass} py-2 file:mr-3 file:rounded-md file:border-0 file:bg-slate-100 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-slate-700 hover:file:bg-slate-200`}
+        />
+        {initial?.photoSrc ? (
+          <div className="flex flex-wrap items-center gap-4 rounded-lg border border-slate-200 bg-slate-50/80 p-4">
+            {/* eslint-disable-next-line @next/next/no-img-element -- admin preview of arbitrary upload path */}
+            <img
+              src={initial.photoSrc}
+              alt=""
+              className="h-16 w-16 shrink-0 rounded-full border border-slate-200 object-cover"
+            />
+            <label className="flex cursor-pointer items-center gap-2 text-sm text-slate-700">
+              <input type="checkbox" name="removePhoto" value="true" className="rounded border-slate-300" />
+              Ukloni trenutačnu fotografiju
+            </label>
+          </div>
+        ) : null}
+      </div>
       <label className="block space-y-2">
         <span className="text-xs font-medium uppercase tracking-wider text-slate-500">Natjecanje / događaj</span>
         <input
