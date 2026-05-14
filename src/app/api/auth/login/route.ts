@@ -30,7 +30,7 @@ export async function POST(request: Request) {
       {
         ok: false,
         error:
-          "Postavite barem jedan par ADMIN_EMAIL/ADMIN_PASSWORD_HASH ili ADMIN2_EMAIL/ADMIN2_PASSWORD_HASH u .env. Pogledajte .env.example.",
+          "Postavite barem jedan admin par: ADMIN_EMAIL + (ADMIN_PASSWORD ili ADMIN_PASSWORD_HASH), ili ADMIN2_EMAIL + (ADMIN2_PASSWORD ili ADMIN2_PASSWORD_HASH). Pogledajte .env.example.",
       },
       { status: 503 },
     );

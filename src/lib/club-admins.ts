@@ -6,19 +6,54 @@
  *   this project defines admin credentials directly in `.env.local`. This is suitable
  *   for small sites with a fixed, small number of admins (2 in this case).
  * - **Multi-admin support pattern**: The module supports two independent admin accounts
- *   (ADMIN_EMAIL/ADMIN_PASSWORD_HASH and ADMIN2_EMAIL/ADMIN2_PASSWORD_HASH). Each can
- *   have a custom display name. This pattern is extensible but wouldn't scale beyond a
+ *   (ADMIN_EMAIL + password, ADMIN2_EMAIL + password). Each account accepts either a
+ *   bcrypt hash (`*_PASSWORD_HASH`) or a plain env password (`*_PASSWORD`) for easier hosting.
  *   handful of users — at that point, a proper user table in a database is needed.
  * - **Email normalization**: Emails are lowercased and URL-decoded (in case of copy-paste
  *   from URLs like `nikebaric%40gmail.com`). This prevents "same email, different case"
  *   from creating duplicate accounts.
- * - **bcrypt password hashing**: Passwords are stored as bcrypt hashes in environment
- *   variables (ADMIN_PASSWORD_HASH / ADMIN2_PASSWORD_HASH). bcrypt is a one-way hash
- *   function designed for passwords — even if the .env file leaks, the actual passwords
- *   remain secret. The `compare()` function handles salt extraction automatically.
+ * - **Passwords**: Prefer `ADMIN_PASSWORD_HASH` / `ADMIN2_PASSWORD_HASH` (bcrypt). For
+ *   hosts where `$` in hashes breaks env vars (e.g. some dashboards), you may set
+ *   `ADMIN_PASSWORD` / `ADMIN2_PASSWORD` instead — plain text, weaker; use bcrypt when possible.
  */
+import { timingSafeEqual } from "crypto";
 import bcrypt from "bcryptjs";
 import { site } from "@/config/site";
+
+function timingSafeEqualUtf8(a: string, b: string): boolean {
+  const ba = Buffer.from(a, "utf8");
+  const bb = Buffer.from(b, "utf8");
+  if (ba.length !== bb.length) return false;
+  return timingSafeEqual(ba, bb);
+}
+
+function looksLikeBcryptHash(value: string): boolean {
+  const t = value.trim();
+  return t.startsWith("$2a$") || t.startsWith("$2b$") || t.startsWith("$2y$");
+}
+
+/** True if this admin row should verify with bcrypt (`hash` string). */
+function useBcryptForStoredSecret(hash: string, plain: string): boolean {
+  if (hash && looksLikeBcryptHash(hash)) return true;
+  if (plain) return false;
+  return Boolean(hash);
+}
+
+async function passwordMatchesStored(
+  passwordRaw: string,
+  hashEnv: string | undefined,
+  plainEnv: string | undefined,
+): Promise<boolean> {
+  const hash = hashEnv?.trim() ?? "";
+  const plain = plainEnv?.trim() ?? "";
+  if (useBcryptForStoredSecret(hash, plain)) {
+    return bcrypt.compare(passwordRaw, hash);
+  }
+  if (plain) {
+    return timingSafeEqualUtf8(passwordRaw, plain);
+  }
+  return false;
+}
 
 /**
  * Normalize an email address: trim whitespace, decode URL encoding, lowercase.
@@ -52,14 +87,17 @@ function resolveAdminDisplayName(envOptional: string | undefined, defaultFullNam
   return defaultFullName;
 }
 
-/** Whether at least one email/password-hash pair for club admins is configured in .env. */
+/** Whether at least one email + (bcrypt hash or plain password) pair is configured. */
 export function hasClubAdminCredentialsConfigured(): boolean {
   const e1 = process.env.ADMIN_EMAIL?.trim();
-  const p1 = process.env.ADMIN_PASSWORD_HASH;
+  const h1 = process.env.ADMIN_PASSWORD_HASH?.trim();
+  const plain1 = process.env.ADMIN_PASSWORD?.trim();
   const e2 = process.env.ADMIN2_EMAIL?.trim();
-  const p2 = process.env.ADMIN2_PASSWORD_HASH;
-  // `Boolean(x)` converts truthy/falsy to true/false — both email AND hash must exist
-  return Boolean((e1 && p1) || (e2 && p2));
+  const h2 = process.env.ADMIN2_PASSWORD_HASH?.trim();
+  const plain2 = process.env.ADMIN2_PASSWORD?.trim();
+  const has1 = Boolean(e1 && (h1 || plain1));
+  const has2 = Boolean(e2 && (h2 || plain2));
+  return has1 || has2;
 }
 
 /**
@@ -76,26 +114,32 @@ export async function matchClubAdmin(
 ): Promise<{ displayName: string; emailNormalized: string } | null> {
   const emailNormalized = normalizeEmail(emailRaw);
 
-  // Build the list of configured admin accounts from environment variables.
-  // Passwords are stored as bcrypt hashes (ADMIN_PASSWORD_HASH / ADMIN2_PASSWORD_HASH).
-  const pairs: Array<{ emailNorm: string; passwordHash: string; displayName: string }> = [];
+  const pairs: Array<{
+    emailNorm: string;
+    passwordHash: string;
+    passwordPlain: string;
+    displayName: string;
+  }> = [];
 
   // First admin account (primary)
   const e1 = process.env.ADMIN_EMAIL?.trim() ?? "";
-  const h1 = process.env.ADMIN_PASSWORD_HASH ?? "";
-  if (e1 && h1) {
+  const h1 = process.env.ADMIN_PASSWORD_HASH?.trim() ?? "";
+  const plain1 = process.env.ADMIN_PASSWORD?.trim() ?? "";
+  if (e1 && (h1 || plain1)) {
     const displayName = resolveAdminDisplayName(process.env.ADMIN_DISPLAY_NAME, site.headCoach.name);
     pairs.push({
       emailNorm: normalizeEmail(e1),
       passwordHash: h1,
+      passwordPlain: plain1,
       displayName,
     });
   }
 
   // Second admin account
   const e2 = process.env.ADMIN2_EMAIL?.trim() ?? "";
-  const h2 = process.env.ADMIN2_PASSWORD_HASH ?? "";
-  if (e2 && h2) {
+  const h2 = process.env.ADMIN2_PASSWORD_HASH?.trim() ?? "";
+  const plain2 = process.env.ADMIN2_PASSWORD?.trim() ?? "";
+  if (e2 && (h2 || plain2)) {
     const displayName = resolveAdminDisplayName(
       process.env.ADMIN2_DISPLAY_NAME,
       SECOND_ADMIN_DEFAULT_DISPLAY_NAME,
@@ -103,14 +147,14 @@ export async function matchClubAdmin(
     pairs.push({
       emailNorm: normalizeEmail(e2),
       passwordHash: h2,
+      passwordPlain: plain2,
       displayName,
     });
   }
 
-  // Check each candidate — bcrypt.compare() verifies the raw password against the hash.
-  // It extracts the salt from the stored hash automatically, so no separate salt storage needed.
   for (const pair of pairs) {
-    if (pair.emailNorm === emailNormalized && await bcrypt.compare(passwordRaw, pair.passwordHash)) {
+    if (pair.emailNorm !== emailNormalized) continue;
+    if (await passwordMatchesStored(passwordRaw, pair.passwordHash, pair.passwordPlain)) {
       return { displayName: pair.displayName, emailNormalized };
     }
   }
