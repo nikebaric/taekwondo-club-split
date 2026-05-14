@@ -14,14 +14,15 @@
  */
 import type { Metadata } from "next";
 import Link from "next/link";
+import { PortalBorbeniShowcase } from "@/components/portal-borbeni-showcase";
 import { SectionHeading } from "@/components/section-heading";
-import { newsPortalCopy } from "@/config/news-portal";
+import { PORTAL_BRAND_NAME, newsPortalCopy } from "@/config/news-portal";
 import { site } from "@/config/site";
 import { fetchNewsPosts } from "@/lib/news-queries";
 import { getListingCover, getPostAuthor, stripHtml } from "@/lib/news-post";
 
 export const metadata: Metadata = {
-  title: "Novosti",
+  title: PORTAL_BRAND_NAME,
   description: `${newsPortalCopy.metaDescription} ${site.name}.`,
 };
 
@@ -33,12 +34,15 @@ export default async function NewsPage() {
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-24">
-      <SectionHeading eyebrow={newsPortalCopy.pageEyebrow} title={newsPortalCopy.pageTitle} />
+      <PortalBorbeniShowcase />
 
-      {posts.length === 0 ? (
-        <p className="mx-auto mt-14 max-w-2xl text-center text-[var(--muted)]">{newsPortalCopy.emptyPosts}</p>
-      ) : (
-        <ul className="mt-14 grid gap-8 md:grid-cols-2">
+      <div className="mt-16 border-t border-slate-200 pt-16">
+        <SectionHeading eyebrow={newsPortalCopy.pageEyebrow} title={newsPortalCopy.pageTitle} />
+
+        {posts.length === 0 ? (
+          <p className="mx-auto mt-14 max-w-2xl text-center text-[var(--muted)]">{newsPortalCopy.emptyPosts}</p>
+        ) : (
+          <ul className="mt-14 grid gap-8 md:grid-cols-2">
           {posts.map((post) => {
             const cover = getListingCover(post);
             const author = getPostAuthor(post);
@@ -92,7 +96,8 @@ export default async function NewsPage() {
             );
           })}
         </ul>
-      )}
+        )}
+      </div>
     </div>
   );
 }

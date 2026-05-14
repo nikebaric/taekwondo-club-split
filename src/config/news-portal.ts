@@ -11,17 +11,19 @@
  * Even in a single-language app, this separation pays off — you can search
  * this file to find any text shown to users.
  *
- * Tekstovi za Portal — borilački portal u duhu Fight Site-a + službene vijesti kluba.
+ * Tekstovi za PORTAL BORBENI SPLIT — borilački portal + službene vijesti kluba.
  * @see https://www.jutarnji.hr/sportske/fightsite — referenca za koncept (UFC, regija, K1/boks, ostalo).
  */
+export const PORTAL_BRAND_NAME = "PORTAL BORBENI SPLIT" as const;
+
 export const newsPortalCopy = {
   metaDescription:
-    "Borilački portal i vijesti Taekwondo kluba Split — sadržaj iz svijeta borilačkih sportova uz klupske objave.",
+    "PORTAL BORBENI SPLIT — borilački portal i vijesti Taekwondo kluba Split; sadržaj iz svijeta borilačkih sportova uz klupske objave.",
 
-  pageEyebrow: "Borilački portal",
+  pageEyebrow: PORTAL_BRAND_NAME,
   pageTitle: "Novosti",
 
-  homeEyebrow: "Portal",
+  homeEyebrow: PORTAL_BRAND_NAME,
   homeTitle: "Zadnje s portala",
   homeSubtitle: "Borilački sadržaj i vijesti kluba — objavljuju se izravno kroz web sučelje kluba.",
 

@@ -16,6 +16,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { SectionHeading } from "@/components/section-heading";
+import { PORTAL_BRAND_NAME } from "@/config/news-portal";
 import { site } from "@/config/site";
 
 // Module-level computation: runs once at import time, not on every render.
@@ -54,7 +55,7 @@ export function ClubTrainersSection() {
         <SectionHeading
           eyebrow="Stručni kadar"
           title="Vodstvo kluba"
-          subtitle="Glavni trener vodi treninge u dvorani OS „BRDA“ i klupske objave na portalu."
+          subtitle={`Glavni trener vodi treninge u dvorani OS „BRDA“ i klupske objave na ${PORTAL_BRAND_NAME}.`}
         />
 
         <div className="mt-14 grid gap-12 lg:grid-cols-12 lg:gap-14 lg:items-start">
@@ -93,7 +94,7 @@ export function ClubTrainersSection() {
                 href="/portal-novosti"
                 className="inline-flex rounded-full border border-slate-300 bg-white px-6 py-3 text-sm font-semibold text-slate-800 shadow-sm hover:bg-slate-50"
               >
-                Portal
+                {PORTAL_BRAND_NAME}
               </Link>
             </div>
           </div>

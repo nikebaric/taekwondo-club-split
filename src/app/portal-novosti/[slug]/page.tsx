@@ -22,6 +22,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArticleAdminToolbar } from "@/components/article-admin-toolbar";
 import { NewsArticleBelowBody } from "@/components/news-article-below-body";
+import { PORTAL_BRAND_NAME } from "@/config/news-portal";
 import { site } from "@/config/site";
 import { isAdminSession } from "@/lib/auth-check";
 import { composeNewsDescriptionHtml } from "@/lib/news-compose-body";
@@ -76,10 +77,10 @@ export default async function NewsPostPage({ params }: Props) {
   return (
     <article className="mx-auto max-w-3xl px-4 py-16 sm:px-6 sm:py-24">
       <p className="text-xs font-semibold uppercase tracking-[0.25em] text-[var(--brand-gold)]">
-        Borilački portal · klub
+        {PORTAL_BRAND_NAME} · klub
       </p>
       <Link href="/portal-novosti" className="mt-4 inline-block text-sm font-semibold text-[var(--accent)]">
-        ← Portal
+        ← {PORTAL_BRAND_NAME}
       </Link>
       <header className="mt-8">
         <time className="text-xs uppercase tracking-wider text-zinc-500" dateTime={post.date}>

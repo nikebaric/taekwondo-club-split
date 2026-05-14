@@ -13,6 +13,8 @@
  * - Separating data from UI — components stay generic, config drives content
  */
 
+import { PORTAL_BRAND_NAME } from "@/config/news-portal";
+
 // `as const` at the end makes every property readonly and literal-typed.
 // This means `site.city` has type "Split" (literal), not `string` (wide).
 export const site = {
@@ -113,7 +115,7 @@ export const site = {
     /** Short paragraphs for display on the page (edit as desired). */
     bio: [
       "Dr. sc. Nenad Bulović glavni je trener Taekwondo kluba Split i nositelj majstorske razine VI. DAN unutar Međunarodne federacije taekwon-do (ITF). Na treningima u Osnovnoj školi „BRDA“ vodi skupine za djecu i odrasle, s naglaskom na siguran napredak i klupske vrijednosti.",
-      "Na portalu objavljuje klupske obavijesti i sadržaj za članove; za upite o upisu i terminima dostupan je i na broju kluba navedenom na stranici Kontakt.",
+      "Na PORTAL BORBENI SPLIT objavljuje klupske obavijesti i sadržaj za članove; za upite o upisu i terminima dostupan je i na broju kluba navedenom na stranici Kontakt.",
     ],
   },
 } as const;
@@ -158,7 +160,7 @@ export const nav = [
   { href: "/raspored-treninga", label: "Treninzi" },
   { href: "/natjecanja-seminari", label: "Natjecanja i seminari" },
   { href: "/rezultati", label: "Rezultati" },
-  { href: "/portal-novosti", label: "Portal" },
+  { href: "/portal-novosti", label: PORTAL_BRAND_NAME },
   { href: "/galerija", label: "Galerija" },
   { href: "/kontakt", label: contactPageLabel },
 ] as const;

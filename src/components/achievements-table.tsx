@@ -7,19 +7,19 @@
  * - **useState for filter state:** Each filter dimension has its own state variable.
  *   Keeping them separate (vs. one object) means changing one filter doesn't
  *   unnecessarily affect the others.
- * - **useMemo for derived data:** `filtered` is computed from `rows` + filter states.
- *   useMemo caches the result and only recomputes when its dependencies change.
- *   Without it, the filter+sort would run on every render — wasteful for large datasets.
+ * - **useMemo for derived data:** `filtered` is computed from `rows` + filter states;
+ *   `sorted` applies the chosen sort; `paged` slices the current page. Page resets when
+ *   filters or page size change; page is clamped when the filtered set shrinks.
  * - **Responsive layout (cards vs table):** Two layouts are rendered side-by-side:
  *   cards (`md:hidden`) for mobile and a table (`hidden md:block`) for desktop.
  *   Tailwind's responsive prefixes toggle visibility — no JavaScript needed for layout.
- * - **TypeScript union types for filters:** `"all" | AchievementMedal` ensures filter
- *   state can only hold valid values. The compiler catches typos at build time.
+ * - **Sort and paging below the table/cards:** Filters stay on top; after the result list,
+ *   sort, page size, range text, and page buttons keep the primary content first.
  */
 "use client";
 
 import Image from "next/image";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   ACHIEVEMENT_BELTS,
   pojasLabel,
@@ -35,6 +35,56 @@ type MedalFilter = "all" | AchievementMedal;
 type AgeFilter = "all" | NonNullable<ClubAchievement["ageGroup"]>;
 type DisciplineFilter = "all" | AchievementDiscipline;
 type BeltFilter = "all" | AchievementBelt;
+
+/** Sort options — value is stable for <select> and URL later if needed */
+type SortKey = "date-desc" | "date-asc" | "name-asc" | "name-desc" | "competition-asc" | "medal-desc";
+
+const MEDAL_RANK: Record<AchievementMedal, number> = { bronze: 0, silver: 1, gold: 2 };
+
+const HR_COLLATOR = new Intl.Collator("hr", { sensitivity: "base" });
+
+function compareDateDesc(a: ClubAchievement, b: ClubAchievement): number {
+  return new Date(b.date).getTime() - new Date(a.date).getTime();
+}
+
+function sortAchievements(rows: ClubAchievement[], sortKey: SortKey): ClubAchievement[] {
+  const copy = [...rows];
+  switch (sortKey) {
+    case "date-desc":
+      copy.sort(compareDateDesc);
+      break;
+    case "date-asc":
+      copy.sort((a, b) => -compareDateDesc(a, b));
+      break;
+    case "name-asc":
+      copy.sort((a, b) => {
+        const c = HR_COLLATOR.compare(a.name, b.name);
+        return c !== 0 ? c : compareDateDesc(a, b);
+      });
+      break;
+    case "name-desc":
+      copy.sort((a, b) => {
+        const c = HR_COLLATOR.compare(b.name, a.name);
+        return c !== 0 ? c : compareDateDesc(a, b);
+      });
+      break;
+    case "competition-asc":
+      copy.sort((a, b) => {
+        const c = HR_COLLATOR.compare(a.competition, b.competition);
+        return c !== 0 ? c : compareDateDesc(a, b);
+      });
+      break;
+    case "medal-desc":
+      copy.sort((a, b) => {
+        const c = MEDAL_RANK[b.medal] - MEDAL_RANK[a.medal];
+        return c !== 0 ? c : compareDateDesc(a, b);
+      });
+      break;
+    default:
+      copy.sort(compareDateDesc);
+  }
+  return copy;
+}
 
 function medalLabel(m: AchievementMedal): string {
   if (m === "gold") return "Zlato";
@@ -131,12 +181,17 @@ function AchievementRowCells({ row }: { row: ClubAchievement }) {
   );
 }
 
+const PAGE_SIZE_OPTIONS = [10, 20, 50] as const;
+
 export function AchievementsTable({ rows }: { rows: ClubAchievement[] }) {
   // Each filter gets its own useState — simpler than managing one big state object.
   const [medalFilter, setMedalFilter] = useState<MedalFilter>("all");
   const [disciplineFilter, setDisciplineFilter] = useState<DisciplineFilter>("all");
   const [ageFilter, setAgeFilter] = useState<AgeFilter>("all");
   const [beltFilter, setBeltFilter] = useState<BeltFilter>("all");
+  const [sortKey, setSortKey] = useState<SortKey>("date-desc");
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState<(typeof PAGE_SIZE_OPTIONS)[number]>(20);
 
   // useMemo caches these booleans — only recalculated when `rows` changes.
   // Used to conditionally show/hide filter sections.
@@ -147,16 +202,35 @@ export function AchievementsTable({ rows }: { rows: ClubAchievement[] }) {
   // The dependency array includes all filter states — React recomputes only when
   // one of these changes, not on every render. This is a performance optimization.
   const filtered = useMemo(() => {
-    let r = rows.filter((row) => {
+    return rows.filter((row) => {
       if (medalFilter !== "all" && row.medal !== medalFilter) return false;
       if (disciplineFilter !== "all" && row.discipline !== disciplineFilter) return false;
       if (ageFilter !== "all" && row.ageGroup !== ageFilter) return false;
       if (beltFilter !== "all" && row.pojas !== beltFilter) return false;
       return true;
     });
-    r = [...r].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-    return r;
   }, [rows, medalFilter, disciplineFilter, ageFilter, beltFilter]);
+
+  const sorted = useMemo(() => sortAchievements(filtered, sortKey), [filtered, sortKey]);
+
+  const totalPages = Math.max(1, Math.ceil(sorted.length / pageSize) || 1);
+  const currentPage = Math.min(Math.max(1, page), totalPages);
+
+  const paged = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    return sorted.slice(start, start + pageSize);
+  }, [sorted, currentPage, pageSize]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [medalFilter, disciplineFilter, ageFilter, beltFilter, pageSize]);
+
+  useEffect(() => {
+    setPage((p) => Math.min(Math.max(1, p), totalPages));
+  }, [totalPages]);
+
+  const rangeFrom = sorted.length === 0 ? 0 : (currentPage - 1) * pageSize + 1;
+  const rangeTo = sorted.length === 0 ? 0 : Math.min(currentPage * pageSize, sorted.length);
 
   return (
     <div className="space-y-8">
@@ -275,13 +349,13 @@ export function AchievementsTable({ rows }: { rows: ClubAchievement[] }) {
       </div>
 
       {/* Cards: all content without horizontal scroll on narrow screens */}
-      <div className="space-y-3 md:hidden">
-        {filtered.length === 0 ? (
+      <div className="mt-10 space-y-3 md:hidden">
+        {sorted.length === 0 ? (
           <div className="rounded-2xl border border-slate-200 bg-[var(--surface)] px-4 py-10 text-center text-sm text-[var(--muted)] shadow-sm">
             Nema rezultata za odabrane filtere.
           </div>
         ) : (
-          filtered.map((row) => (
+          paged.map((row) => (
             <div
               key={row.id}
               className="rounded-2xl border border-slate-200 bg-[var(--surface)] p-4 shadow-sm"
@@ -347,7 +421,7 @@ export function AchievementsTable({ rows }: { rows: ClubAchievement[] }) {
       </div>
 
       {/* Table: fills the container width, no min-width or overflow-x */}
-      <div className="hidden rounded-2xl border border-slate-200 bg-[var(--surface)] shadow-sm md:block">
+      <div className="mt-10 hidden rounded-2xl border border-slate-200 bg-[var(--surface)] shadow-sm md:block">
         <table className="w-full table-fixed border-collapse text-left text-xs lg:text-sm">
           <thead className="border-b border-slate-200 bg-slate-50 text-[10px] uppercase tracking-wider text-slate-500 lg:text-xs">
             <tr>
@@ -363,14 +437,14 @@ export function AchievementsTable({ rows }: { rows: ClubAchievement[] }) {
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-200">
-            {filtered.length === 0 ? (
+            {sorted.length === 0 ? (
               <tr>
                 <td colSpan={9} className="px-4 py-10 text-center text-[var(--muted)]">
                   Nema rezultata za odabrane filtere.
                 </td>
               </tr>
             ) : (
-              filtered.map((row) => (
+              paged.map((row) => (
                 <tr key={row.id} className="hover:bg-slate-50/80">
                   <AchievementRowCells row={row} />
                 </tr>
@@ -379,6 +453,87 @@ export function AchievementsTable({ rows }: { rows: ClubAchievement[] }) {
           </tbody>
         </table>
       </div>
+
+      {sorted.length > 0 ? (
+        <div className="mt-6 space-y-4">
+          <div className="flex flex-col gap-3 border-t border-slate-200 pt-6 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between sm:gap-4">
+            <div className="flex flex-col gap-1.5">
+              <label htmlFor="ach-sort" className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500">
+                Sortiranje
+              </label>
+              <select
+                id="ach-sort"
+                value={sortKey}
+                onChange={(e) => setSortKey(e.target.value as SortKey)}
+                className="max-w-xs rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-200"
+              >
+                <option value="date-desc">Datum (najnovije prvo)</option>
+                <option value="date-asc">Datum (najstarije prvo)</option>
+                <option value="name-asc">Ime i prezime (A–Ž)</option>
+                <option value="name-desc">Ime i prezime (Ž–A)</option>
+                <option value="competition-asc">Natjecanje (A–Ž)</option>
+                <option value="medal-desc">Medalja (zlato prvo)</option>
+              </select>
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <label htmlFor="ach-page-size" className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500">
+                Po stranici
+              </label>
+              <select
+                id="ach-page-size"
+                value={pageSize}
+                onChange={(e) => setPageSize(Number(e.target.value) as (typeof PAGE_SIZE_OPTIONS)[number])}
+                className="max-w-[12rem] rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-200"
+              >
+                {PAGE_SIZE_OPTIONS.map((n) => (
+                  <option key={n} value={n}>
+                    {n} redaka
+                  </option>
+                ))}
+              </select>
+            </div>
+            <p className="text-sm text-[var(--muted)] sm:ml-auto sm:text-right">
+              Prikazano{" "}
+              <span className="tabular-nums font-medium text-slate-700">
+                {rangeFrom}–{rangeTo}
+              </span>{" "}
+              od <span className="tabular-nums font-medium text-slate-700">{sorted.length}</span>
+            </p>
+          </div>
+
+          {totalPages > 1 ? (
+            <nav
+              className="flex flex-col items-stretch gap-3 rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
+              aria-label="Straničenje rezultata"
+            >
+              <p className="text-center text-sm text-[var(--muted)] sm:text-left">
+                Stranica{" "}
+                <span className="font-semibold text-slate-800">
+                  {currentPage} / {totalPages}
+                </span>
+              </p>
+              <div className="flex justify-center gap-2 sm:justify-end">
+                <button
+                  type="button"
+                  disabled={currentPage <= 1}
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-800 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  Prethodna
+                </button>
+                <button
+                  type="button"
+                  disabled={currentPage >= totalPages}
+                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                  className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-800 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  Sljedeća
+                </button>
+              </div>
+            </nav>
+          ) : null}
+        </div>
+      ) : null}
     </div>
   );
 }

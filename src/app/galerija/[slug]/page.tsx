@@ -107,6 +107,21 @@ export default async function GalleryAlbumPage({ params }: Props) {
             {album.title}
           </h1>
           <p className="mt-2 max-w-2xl text-sm text-zinc-300">{album.description}</p>
+          {album.attachments?.length ? (
+            <ul className="mt-4 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+              {album.attachments.map((a) => (
+                <li key={a.href}>
+                  <a
+                    href={a.href}
+                    download
+                    className="inline-flex rounded-full border border-white/25 bg-white/10 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-white backdrop-blur-sm transition hover:bg-white/20"
+                  >
+                    {a.label}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          ) : null}
           <p className="mt-2 text-xs text-zinc-500">{mediaSummary(album)}</p>
         </div>
       </div>

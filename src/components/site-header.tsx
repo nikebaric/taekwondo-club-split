@@ -65,12 +65,12 @@ export async function SiteHeader() {
         {/* Desktop navigation — hidden on mobile (`hidden lg:flex`).
             .map() renders a list from an array — each item needs a unique `key` prop
             so React can efficiently track which items changed during re-renders. */}
-        <nav className="hidden min-w-0 flex-1 items-center justify-center gap-0.5 lg:flex xl:gap-1">
+        <nav className="hidden min-w-0 flex-1 items-center justify-center gap-0 lg:flex xl:gap-0.5">
           {nav.map((item) => (
             <Link
               key={item.href}
               href={item.href}
-              className="relative whitespace-nowrap rounded-md px-2 py-2 text-[13px] font-medium text-slate-600 transition-colors duration-200 after:pointer-events-none after:absolute after:inset-x-2 after:bottom-1.5 after:h-0.5 after:origin-left after:scale-x-0 after:rounded-full after:bg-[var(--accent)] after:transition-transform hover:bg-slate-100/80 hover:text-slate-900 hover:after:scale-x-100 xl:px-2.5 xl:text-sm xl:after:inset-x-2.5"
+              className="relative whitespace-nowrap rounded-md px-1.5 py-2 text-[12px] font-medium uppercase tracking-tight text-slate-600 transition-colors duration-200 after:pointer-events-none after:absolute after:inset-x-1.5 after:bottom-1.5 after:h-0.5 after:origin-left after:scale-x-0 after:rounded-full after:bg-[var(--accent)] after:transition-transform hover:bg-slate-100/80 hover:text-slate-900 hover:after:scale-x-100 xl:px-2 xl:text-[13px] xl:after:inset-x-2"
             >
               {item.label}
             </Link>
@@ -127,7 +127,7 @@ function MobileNav({
           <CloseDetailsLink
             key={item.href}
             href={item.href}
-            className="block rounded-md px-3 py-2 text-sm text-slate-700 hover:bg-slate-100 hover:text-slate-900"
+            className="block rounded-md px-3 py-2 text-xs font-medium uppercase tracking-tight text-slate-700 hover:bg-slate-100 hover:text-slate-900"
           >
             {item.label}
           </CloseDetailsLink>
@@ -137,7 +137,7 @@ function MobileNav({
         {adminHubVisible ? (
           <CloseDetailsLink
             href="/admin"
-            className="block rounded-md px-3 py-2 text-sm font-semibold text-[var(--accent)] hover:bg-slate-100"
+            className="block rounded-md px-3 py-2 text-xs font-semibold uppercase tracking-tight text-[var(--accent)] hover:bg-slate-100"
           >
             Administracija
           </CloseDetailsLink>

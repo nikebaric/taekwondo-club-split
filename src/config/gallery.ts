@@ -54,6 +54,11 @@ export type GalleryAlbum = {
   /** Short description below the title on the album list and album page */
   description: string;
   /**
+   * Optional download links (e.g. Word/PDF) shown under the hero on the album page.
+   * Paths must be under `public/` (e.g. `/docs/...`).
+   */
+  attachments?: readonly { href: string; label: string }[];
+  /**
    * Album cover on the list. If missing, the first image in `items` is used.
    */
   coverSrc?: string;

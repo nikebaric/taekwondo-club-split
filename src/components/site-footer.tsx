@@ -60,7 +60,7 @@ export function SiteFooter() {
               <li key={item.href}>
                 <Link
                   href={item.href}
-                  className="text-sm text-slate-600 transition-colors duration-200 hover:text-[var(--accent)]"
+                  className="text-sm font-medium uppercase tracking-tight text-slate-600 transition-colors duration-200 hover:text-[var(--accent)]"
                 >
                   {item.label}
                 </Link>

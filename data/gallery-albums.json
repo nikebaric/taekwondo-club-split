@@ -146,5 +146,86 @@
         "caption": "Ilustrativna grafika tima"
       }
     ]
+  },
+  {
+    "slug": "povijest-diplome-i-video",
+    "title": "Povijest, diplome i video zapisi",
+    "description": "ICTF potvrde, diplome i plakati kluba, članska karta te kratki videozapisi iz dvorane. Materijal „Taekwondo u Splitu“ dostupan je i kao Word datoteka.",
+    "attachments": [
+      {
+        "href": "/docs/taekwondo-u-splitu-naslovnica.docx",
+        "label": "Preuzmi Word — Taekwondo u Splitu (naslovnica)"
+      }
+    ],
+    "coverSrc": "/galerija/povijest-naslovnica-knjige-tkd-split.png",
+    "coverAlt": "Naslovnica knjige / materijala Taekwondo u Splitu",
+    "items": [
+      {
+        "kind": "image",
+        "src": "/galerija/povijest-ictf-vi-dan-nenad-bulovic.png",
+        "alt": "ICTF Black Belt Certificate — Dr. sc. Nenad Bulović, VI. DAN (2012.)",
+        "caption": "ICTF — VI. DAN crni pojas (Nenad Bulović)"
+      },
+      {
+        "kind": "image",
+        "src": "/galerija/povijest-naslovnica-knjige-tkd-split.png",
+        "alt": "Naslovnica materijala Taekwondo u Splitu — Dr. sc. Nenad Bulović u doboku",
+        "caption": "Taekwondo u Splitu — naslovnica"
+      },
+      {
+        "kind": "image",
+        "src": "/galerija/povijest-diploma-trenera-1979.png",
+        "alt": "Diploma Taekwondo trenera Saveza SR Hrvatske — Nenad Bulović (1979.)",
+        "caption": "Diploma trenera (1979.)"
+      },
+      {
+        "kind": "image",
+        "src": "/galerija/povijest-plakat-hrvatska-bih-2025.png",
+        "alt": "Plakat Taekwondo spektakl Hrvatska vs Bosna i Hercegovina, Split 2025.",
+        "caption": "Plakat spektakla (2025.)"
+      },
+      {
+        "kind": "image",
+        "src": "/galerija/povijest-diploma-spektakl-2025.png",
+        "alt": "Diploma Taekwondo spektakla — rujan 2025.",
+        "caption": "Diploma spektakla (2025.)"
+      },
+      {
+        "kind": "image",
+        "src": "/galerija/povijest-diploma-spektakl-2025-sudionici.png",
+        "alt": "Diploma za sudionike Taekwondo spektakla (2025.)",
+        "caption": "Diploma za sudionike (2025.)"
+      },
+      {
+        "kind": "image",
+        "src": "/galerija/povijest-clanska-karta.png",
+        "alt": "Dizajn članske karte Taekwon-do kluba Split",
+        "caption": "Članska karta — dizajn"
+      },
+      {
+        "kind": "videoFile",
+        "src": "/galerija/video/tkd-dvorana-2023-11.mp4",
+        "title": "Dvorana (studeni 2023.)",
+        "caption": "Kratki videozapis iz klupske dvorane."
+      },
+      {
+        "kind": "videoFile",
+        "src": "/galerija/video/tkd-2023-12.mp4",
+        "title": "Klupski trenutak (prosinac 2023.)",
+        "caption": "Videozapis s treninga / događaja."
+      },
+      {
+        "kind": "videoFile",
+        "src": "/galerija/video/tkd-klub-2024-11.mp4",
+        "title": "Trening / događaj (studeni 2024.)",
+        "caption": "Duži videoisječak iz dvorane."
+      },
+      {
+        "kind": "videoFile",
+        "src": "/galerija/video/tkd-2026-02.mp4",
+        "title": "Dvorana (veljača 2026.)",
+        "caption": "Videozapis s treninga."
+      }
+    ]
   }
 ]
