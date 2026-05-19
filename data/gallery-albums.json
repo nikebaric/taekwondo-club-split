@@ -148,6 +148,32 @@
     ]
   },
   {
+    "slug": "letci",
+    "title": "Letci",
+    "description": "Informativni letci za mlade i veterane — preuzmite PDF ili Word verziju.",
+    "coverSrc": "/galerija/promo-letak-2023-stranica-1.png",
+    "coverAlt": "Letak Taekwondo kluba Split",
+    "attachments": [
+      {
+        "href": "/docs/letak-mladi.pdf",
+        "label": "Letak — mladi (PDF)"
+      },
+      {
+        "href": "/docs/letak-mladi.docx",
+        "label": "Letak — mladi (Word)"
+      },
+      {
+        "href": "/docs/letak-veterani.pdf",
+        "label": "Letak — veterani (PDF)"
+      },
+      {
+        "href": "/docs/letak-veterani.docx",
+        "label": "Letak — veterani (Word)"
+      }
+    ],
+    "items": []
+  },
+  {
     "slug": "povijest-diplome-i-video",
     "title": "Povijest, diplome i video zapisi",
     "description": "ICTF potvrde, diplome i plakati kluba, članska karta te kratki videozapisi iz dvorane. Materijal „Taekwondo u Splitu“ dostupan je i kao Word datoteka.",
