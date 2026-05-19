@@ -24,6 +24,8 @@ export type GalleryImage = {
   src: string;
   alt: string;
   caption?: string; // `?` means optional — the property may be absent or undefined
+  /** If set, a download link is shown under the preview (PDF/DOCX in /docs). */
+  downloadHref?: string;
 };
 
 /** YouTube: URL in the form https://www.youtube.com/embed/VIDEO_ID */

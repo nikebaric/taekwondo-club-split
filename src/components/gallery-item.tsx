@@ -73,8 +73,13 @@ export function GalleryMedia({ item, slideLayout = "card" }: Props) {
 
     const captionClass =
       slideLayout === "albumThumb"
-        ? "border-t border-slate-200 px-2 py-2 text-center text-xs leading-snug text-[var(--muted)] line-clamp-2"
+        ? "border-t border-slate-200 px-2 py-2 text-center text-xs leading-snug text-[var(--muted)]"
         : "border-t border-slate-200 px-4 py-3 text-sm text-[var(--muted)]";
+
+    const isDocPreview = Boolean(item.downloadHref);
+    const imageFitClass = isDocPreview
+      ? "object-contain object-top bg-white p-1"
+      : "object-cover transition duration-500 group-hover:scale-[1.03]";
 
     return (
       <figure className={figureShell(slideLayout)}>
@@ -83,15 +88,27 @@ export function GalleryMedia({ item, slideLayout = "card" }: Props) {
             src={item.src}
             alt={item.alt}
             fill
-            className="object-cover transition duration-500 group-hover:scale-[1.03]"
+            className={imageFitClass}
             sizes={imageSizes(slideLayout)}
           />
           {slideLayout === "albumBanner" ? (
             <div className={galleryAlbumHeroGradientClass} aria-hidden />
           ) : null}
         </div>
-        {(item.caption || item.alt) && (
-          <figcaption className={captionClass}>{item.caption ?? item.alt}</figcaption>
+        {(item.caption || item.alt || item.downloadHref) && (
+          <figcaption className={captionClass}>
+            {item.caption ?? item.alt ? <span className="block">{item.caption ?? item.alt}</span> : null}
+            {item.downloadHref ? (
+              <a
+                href={item.downloadHref}
+                download
+                className="mt-1.5 inline-block text-xs font-semibold text-[var(--accent)] hover:underline"
+                onClick={(e) => e.stopPropagation()}
+              >
+                Preuzmi datoteku →
+              </a>
+            ) : null}
+          </figcaption>
         )}
       </figure>
     );

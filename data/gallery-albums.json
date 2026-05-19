@@ -150,9 +150,9 @@
   {
     "slug": "letci",
     "title": "Letci",
-    "description": "Informativni letci za mlade i veterane — preuzmite PDF ili Word verziju.",
-    "coverSrc": "/galerija/promo-letak-2023-stranica-1.png",
-    "coverAlt": "Letak Taekwondo kluba Split",
+    "description": "Informativni letci za mlade i veterane — pregled u galeriji, PDF i Word za preuzimanje.",
+    "coverSrc": "/galerija/letak-mladi-pregled-pdf.png",
+    "coverAlt": "Letak — mladi (pregled)",
     "attachments": [
       {
         "href": "/docs/letak-mladi.pdf",
@@ -171,7 +171,36 @@
         "label": "Letak — veterani (Word)"
       }
     ],
-    "items": []
+    "items": [
+      {
+        "kind": "image",
+        "src": "/galerija/letak-mladi-pregled-pdf.png",
+        "alt": "Pregled letka za mlade — PDF verzija",
+        "caption": "Letak — mladi (PDF)",
+        "downloadHref": "/docs/letak-mladi.pdf"
+      },
+      {
+        "kind": "image",
+        "src": "/galerija/letak-mladi-pregled-docx.png",
+        "alt": "Pregled letka za mlade — Word verzija",
+        "caption": "Letak — mladi (Word)",
+        "downloadHref": "/docs/letak-mladi.docx"
+      },
+      {
+        "kind": "image",
+        "src": "/galerija/letak-veterani-pregled-pdf.png",
+        "alt": "Pregled letka za veterane — PDF verzija",
+        "caption": "Letak — veterani (PDF)",
+        "downloadHref": "/docs/letak-veterani.pdf"
+      },
+      {
+        "kind": "image",
+        "src": "/galerija/letak-veterani-pregled-docx.png",
+        "alt": "Pregled letka za veterane — Word verzija",
+        "caption": "Letak — veterani (Word)",
+        "downloadHref": "/docs/letak-veterani.docx"
+      }
+    ]
   },
   {
     "slug": "povijest-diplome-i-video",
