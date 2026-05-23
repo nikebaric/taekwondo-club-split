@@ -16,6 +16,7 @@ import type { Metadata } from "next";
 import { ContactForm } from "@/components/contact-form";
 import { SectionHeading } from "@/components/section-heading";
 import { contactPageLabel, formatClubAddressSingleLine, phoneToTelHref, site } from "@/config/site";
+import { resolveSiteUrl } from "@/lib/site-url";
 
 export const metadata: Metadata = {
   title: contactPageLabel,
@@ -36,7 +37,7 @@ function contactJsonLd() {
     "@type": "SportsActivityLocation",
     name: site.name,
     description: site.description,
-    url: process.env.NEXT_PUBLIC_SITE_URL ? `${process.env.NEXT_PUBLIC_SITE_URL}/contact` : undefined,
+    url: `${resolveSiteUrl()}/kontakt`,
     address: {
       "@type": "PostalAddress",
       streetAddress,

@@ -19,6 +19,7 @@ import "./globals.css";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { site } from "@/config/site";
+import { siteMetadataBase } from "@/lib/site-url";
 
 // next/font/google downloads the font files at BUILD time and serves them
 // from your own domain — no requests to fonts.googleapis.com at runtime.
@@ -35,15 +36,13 @@ const bebas = Bebas_Neue({
   variable: "--font-display",
 });
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
-
 // Exporting `metadata` from a layout or page tells Next.js what to put in
 // <head>. The framework merges metadata from parent layouts and child pages.
 // `title.template` lets child pages export just `title: "About"` and Next.js
 // automatically renders "About | Club Name" using the %s placeholder.
 export const metadata: Metadata = {
   // metadataBase resolves relative URLs in og:image, canonical, etc.
-  metadataBase: new URL(siteUrl),
+  metadataBase: siteMetadataBase(),
   title: {
     default: `${site.name} | ${site.city}`,
     // %s is replaced by the child page's title export
