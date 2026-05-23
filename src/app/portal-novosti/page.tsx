@@ -20,6 +20,7 @@ import { PORTAL_BRAND_NAME, newsPortalCopy } from "@/config/news-portal";
 import { site } from "@/config/site";
 import { fetchNewsPosts } from "@/lib/news-queries";
 import { getListingCover, getPostAuthor, stripHtml } from "@/lib/news-post";
+import { sanitizeHtml } from "@/lib/sanitize-html";
 
 export const metadata: Metadata = {
   title: PORTAL_BRAND_NAME,
@@ -81,7 +82,7 @@ export default async function NewsPage() {
                     ) : null}
                     <h2
                       className="mt-2 font-[family-name:var(--font-display)] text-2xl tracking-[0.04em] text-slate-900 sm:text-3xl"
-                      dangerouslySetInnerHTML={{ __html: post.title.rendered }}
+                      dangerouslySetInnerHTML={{ __html: sanitizeHtml(post.title.rendered) }}
                     />
                     <p className="mt-3 flex-1 text-[var(--muted)]">{stripHtml(post.excerpt.rendered)}</p>
                     <Link

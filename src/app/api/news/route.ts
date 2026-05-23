@@ -28,7 +28,6 @@ import { getMemberSession } from "@/lib/auth-check";
 import { parseCoverImageIndex } from "@/lib/news-cover";
 import {
   composeNewsDescriptionHtml,
-  inferVideoMime,
   normalizeNewsDescriptionPlain,
 } from "@/lib/news-compose-body";
 import { appendLocalNewsPost, readLocalNewsPosts, uniqueSlug } from "@/lib/news-store";

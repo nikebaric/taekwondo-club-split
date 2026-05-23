@@ -28,6 +28,7 @@ import { isAdminSession } from "@/lib/auth-check";
 import { composeNewsDescriptionHtml } from "@/lib/news-compose-body";
 import { extractDescriptionPlainFromBodyHtml } from "@/lib/news-extract-body";
 import { extractNewsBodyHtmlFragment } from "@/lib/news-legacy-media";
+import { sanitizeHtml } from "@/lib/sanitize-html";
 import { resolveHeroCoverSrc } from "@/lib/news-cover";
 import { fetchLocalNewsPostBySlug, fetchNewsPostBySlug } from "@/lib/news-queries";
 import { resolveArticleGallery } from "@/lib/news-resolve-gallery";
@@ -92,7 +93,7 @@ export default async function NewsPostPage({ params }: Props) {
         </time>
         <h1
           className="mt-3 font-[family-name:var(--font-display)] text-4xl tracking-[0.06em] text-slate-900 sm:text-5xl"
-          dangerouslySetInnerHTML={{ __html: post.title.rendered }}
+          dangerouslySetInnerHTML={{ __html: sanitizeHtml(post.title.rendered) }}
         />
       </header>
       {coverSrc ? (
@@ -109,7 +110,7 @@ export default async function NewsPostPage({ params }: Props) {
       ) : null}
       <div
         className={`prose prose-site prose-lg max-w-none prose-headings:font-[family-name:var(--font-display)] prose-headings:tracking-wide prose-headings:text-slate-900 ${coverSrc ? "mt-6" : "mt-8"}`}
-        dangerouslySetInnerHTML={{ __html: bodyHtml }}
+        dangerouslySetInnerHTML={{ __html: sanitizeHtml(bodyHtml) }}
       />
       <NewsArticleBelowBody
         images={gallery.images}

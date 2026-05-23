@@ -221,6 +221,7 @@ export function AchievementsTable({ rows }: { rows: ClubAchievement[] }) {
     return sorted.slice(start, start + pageSize);
   }, [sorted, currentPage, pageSize]);
 
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     setPage(1);
   }, [medalFilter, disciplineFilter, ageFilter, beltFilter, pageSize]);
@@ -228,6 +229,7 @@ export function AchievementsTable({ rows }: { rows: ClubAchievement[] }) {
   useEffect(() => {
     setPage((p) => Math.min(Math.max(1, p), totalPages));
   }, [totalPages]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const rangeFrom = sorted.length === 0 ? 0 : (currentPage - 1) * pageSize + 1;
   const rangeTo = sorted.length === 0 ? 0 : Math.min(currentPage * pageSize, sorted.length);

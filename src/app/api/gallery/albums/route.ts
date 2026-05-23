@@ -46,7 +46,7 @@ export async function POST(request: Request) {
 
   const title = String(form.get("title") ?? "").trim();
   const description = String(form.get("description") ?? "").trim();
-  let slugInput = String(form.get("slug") ?? "").trim();
+  const slugInput = String(form.get("slug") ?? "").trim();
 
   if (title.length < 1 || title.length > 200) {
     return Response.json({ ok: false, error: "Naslov mora imati 1–200 znakova." }, { status: 400 });

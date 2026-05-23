@@ -47,7 +47,8 @@ function withItemCaption(item: GalleryItem, caption: string): GalleryItem {
   const t = caption.trim().slice(0, GALLERY_MAX_ITEM_CAPTION_LENGTH);
   if (t.length === 0) {
     if (!("caption" in item) || item.caption === undefined) return item;
-    const { caption: _drop, ...rest } = item as GalleryItem & { caption?: string };
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { caption: _unused, ...rest } = item as GalleryItem & { caption?: string };
     return rest as GalleryItem;
   }
   return { ...item, caption: t };

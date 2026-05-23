@@ -33,7 +33,7 @@ function looksLikeBcryptHash(value: string): boolean {
 }
 
 /** True if this admin row should verify with bcrypt (`hash` string). */
-function useBcryptForStoredSecret(hash: string, plain: string): boolean {
+function shouldUseBcrypt(hash: string, plain: string): boolean {
   if (hash && looksLikeBcryptHash(hash)) return true;
   if (plain) return false;
   return Boolean(hash);
@@ -46,7 +46,7 @@ async function passwordMatchesStored(
 ): Promise<boolean> {
   const hash = hashEnv?.trim() ?? "";
   const plain = plainEnv?.trim() ?? "";
-  if (useBcryptForStoredSecret(hash, plain)) {
+  if (shouldUseBcrypt(hash, plain)) {
     return bcrypt.compare(passwordRaw, hash);
   }
   if (plain) {

@@ -62,7 +62,11 @@ export function AdminGalleryAlbumForm({ mode, editSlug, initialAlbum }: AdminGal
   const [error, setError] = useState<string | null>(null);
   const [removeSet, setRemoveSet] = useState<Set<number>>(new Set());
   const removeSetRef = useRef(removeSet);
-  removeSetRef.current = removeSet;
+
+  // Update ref when removeSet changes
+  useEffect(() => {
+    removeSetRef.current = removeSet;
+  }, [removeSet]);
 
   const initialItemCount = initialAlbum?.items?.length ?? 0;
   const hasExistingLayoutMode = mode === "edit" && initialItemCount > 0;
@@ -83,6 +87,8 @@ export function AdminGalleryAlbumForm({ mode, editSlug, initialAlbum }: AdminGal
   const nNewFiles = mediaQueue.length;
   const nNewYoutube = ytParsed.error ? 0 : ytParsed.items.length;
 
+  // Initialize state when editSlug or mode changes
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     if (mode !== "edit" || !editSlug) return;
     const caps: Record<string, string> = {};
@@ -100,8 +106,10 @@ export function AdminGalleryAlbumForm({ mode, editSlug, initialAlbum }: AdminGal
     setRemoveSet(new Set());
     setMediaQueue([]);
     setYoutubeText("");
-  }, [editSlug, mode, initialAlbum?.items?.length]);
+    setOrderTokens([]);
+  }, [editSlug, mode, initialAlbum?.items]);
 
+  // Update layout slots when media queue or youtube changes
   useEffect(() => {
     if (!hasExistingLayoutMode) return;
     setLayoutSlots((prev) => {
@@ -110,8 +118,10 @@ export function AdminGalleryAlbumForm({ mode, editSlug, initialAlbum }: AdminGal
       const ytSlots = Array.from({ length: nNewYoutube }, (_, j) => ({ kind: "newYoutube" as const, ytIndex: j }));
       return [...existingSlots, ...fileSlots, ...ytSlots];
     });
-  }, [hasExistingLayoutMode, nNewFiles, nNewYoutube]);
+  }, [hasExistingLayoutMode, mediaQueue, nNewYoutube]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
+  // Update order tokens when media/youtube counts change
   useEffect(() => {
     if (hasExistingLayoutMode) return;
     if (lastMediaYoutubeDims.current.n === nNewFiles && lastMediaYoutubeDims.current.m === nNewYoutube) return;

@@ -44,21 +44,24 @@ export function AdminGalleryFields({
 
   const [coverIdx, setCoverIdx] = useState(initialCoverIdx);
 
+  const effectiveCount = uploadCount > 0 ? uploadCount : existingImageSrcs.length;
+
   // Sync state to prop changes: when the article being edited changes,
-  // reset the cover index. This useEffect is necessary because useState's
-  // initial value only applies on first mount, not when props update.
+  // reset the cover index. Using a key on the parent component would be cleaner,
+  // but this works for the current structure.
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     setCoverIdx(initialCoverIdx);
   }, [initialCoverIdx]);
 
-  const effectiveCount = uploadCount > 0 ? uploadCount : existingImageSrcs.length;
-
+  // Clamp cover index to valid range when count changes
   useEffect(() => {
     setCoverIdx((prev) => {
       const max = Math.max(0, effectiveCount - 1);
       return Math.min(prev, max);
     });
   }, [effectiveCount]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const showCoverPicker = effectiveCount > 1;
   const showSingleHidden = effectiveCount === 1;

@@ -25,6 +25,7 @@ import { placeholders } from "@/config/placeholders";
 import { contactPageLabel, phoneToTelHref, site } from "@/config/site";
 import { fetchNewsPosts } from "@/lib/news-queries";
 import { getListingCover, stripHtml } from "@/lib/news-post";
+import { sanitizeHtml } from "@/lib/sanitize-html";
 
 // async Server Component — data is fetched on the server at request time
 // (or at build time for statically generated pages). The resolved data is
@@ -319,7 +320,7 @@ export default async function Home() {
                       </p>
                       <h3
                         className="mt-2 font-semibold text-slate-900 group-hover:text-[var(--accent)]"
-                        dangerouslySetInnerHTML={{ __html: post.title.rendered }}
+                        dangerouslySetInnerHTML={{ __html: sanitizeHtml(post.title.rendered) }}
                       />
                       <p className="mt-2 line-clamp-2 text-sm text-[var(--muted)]">
                         {stripHtml(post.excerpt.rendered)}

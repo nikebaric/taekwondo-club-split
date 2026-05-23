@@ -22,7 +22,8 @@ const nextConfig: NextConfig = {
   // from the same origin by default. If you open the site from a phone or
   // another machine on the LAN, the origin differs. Adding the IP here
   // whitelists that cross-origin connection so hot-reload still works.
-  allowedDevOrigins: ["192.168.1.75"],
+  // Set via environment variable: ALLOWED_DEV_ORIGINS=192.168.1.75,192.168.1.76
+  allowedDevOrigins: process.env.ALLOWED_DEV_ORIGINS?.split(",").map((s) => s.trim()) ?? [],
 
   // Next.js <Image> can only load remote images from explicitly allowed
   // hosts. This prevents abuse of the built-in image optimisation endpoint
