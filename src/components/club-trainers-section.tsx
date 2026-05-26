@@ -68,8 +68,8 @@ export function ClubTrainersSection() {
               sizes="(max-width:1024px) 100vw, 40vw"
             />
           </div>
-          <div className="prose prose-site prose-lg max-w-none prose-headings:text-slate-900 lg:col-span-7">
-            <p className="text-lg font-semibold text-slate-900">
+          <div className="prose prose-sm prose-site max-w-none prose-headings:text-slate-900 lg:col-span-7">
+            <p className="text-base font-semibold text-slate-900">
               {coachDisplayName} — {coach.rank}, {coach.federation}
             </p>
             {/* Rendering an array: .map() converts each bio paragraph string into

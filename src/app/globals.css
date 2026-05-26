@@ -63,7 +63,7 @@ body {
   color: var(--foreground);
 }
 
-/** Light articles (About, Coaches, news) */
+/** Rich text blocks — use with `prose prose-sm prose-site` (same scale as text-sm elsewhere). */
 /* The prose class (from @tailwindcss/typography) accepts CSS-variable
    overrides (--tw-prose-*) to customise body text, headings, link colours
    etc. This .prose-site class is a project-specific preset applied

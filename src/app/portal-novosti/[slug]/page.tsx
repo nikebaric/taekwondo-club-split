@@ -109,7 +109,7 @@ export default async function NewsPostPage({ params }: Props) {
         </div>
       ) : null}
       <div
-        className={`prose prose-site prose-lg max-w-none prose-headings:font-[family-name:var(--font-display)] prose-headings:tracking-wide prose-headings:text-slate-900 ${coverSrc ? "mt-6" : "mt-8"}`}
+        className={`prose prose-sm prose-site max-w-none prose-headings:font-[family-name:var(--font-display)] prose-headings:tracking-wide prose-headings:text-slate-900 ${coverSrc ? "mt-6" : "mt-8"}`}
         dangerouslySetInnerHTML={{ __html: sanitizeHtml(bodyHtml) }}
       />
       <NewsArticleBelowBody

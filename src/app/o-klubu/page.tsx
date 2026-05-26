@@ -53,7 +53,7 @@ export default function AboutPage() {
         {/* The `prose` class comes from @tailwindcss/typography and styles
             raw HTML / rich text content with sensible typographic defaults.
             `prose-site` layers on project-specific colour overrides. */}
-        <div className="prose prose-site prose-lg max-w-none prose-headings:text-slate-900">
+        <div className="prose prose-sm prose-site max-w-none prose-headings:text-slate-900">
           <p>{site.taekwondoMeaningShort}</p>
           <p>
             Dobrodošli su potpuni početnici i iskusni sportaši. Trening uključuje osnove, forme, partnerske
