@@ -14,26 +14,32 @@
  * This is a simplified version of the "Repository pattern" from backend architecture.
  */
 
+import type { Locale } from "@/i18n/config";
+import { localizeNewsPost } from "@/lib/localize-club-data";
 import { localPostToNewsShape } from "@/lib/news-map";
 import type { NewsPost } from "@/lib/news-post";
 import type { LocalNewsPost } from "@/lib/local-news-types";
 import { readLocalNewsPosts } from "@/lib/news-store";
 
-// Default parameter (`limit = 24`) — caller can override or use the default.
-export async function fetchNewsPosts(limit = 24): Promise<NewsPost[]> {
+export async function fetchNewsPosts(limit = 24, locale: Locale = "hr"): Promise<NewsPost[]> {
   const raw = await readLocalNewsPosts();
-  // Map raw data to UI shape, then sort by date descending (newest first).
-  // `.getTime()` converts to milliseconds for numeric comparison.
-  const mapped = raw.map(localPostToNewsShape);
+  const mapped = raw.map((p) => localPostToNewsShape(localizeNewsPost(p, locale)));
   mapped.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   return mapped.slice(0, limit);
 }
 
-export async function fetchNewsPostBySlug(slug: string): Promise<NewsPost | null> {
+export async function fetchNewsPostBySlug(slug: string, locale: Locale = "hr"): Promise<NewsPost | null> {
   const raw = await readLocalNewsPosts();
   const hit = raw.find((p) => p.slug === slug);
-  // Conditional mapping — only transform if found, otherwise return null
-  return hit ? localPostToNewsShape(hit) : null;
+  return hit ? localPostToNewsShape(localizeNewsPost(hit, locale)) : null;
+}
+
+export async function fetchLocalizedLocalNewsPostBySlug(
+  slug: string,
+  locale: Locale = "hr",
+): Promise<LocalNewsPost | null> {
+  const hit = await fetchLocalNewsPostBySlug(slug);
+  return hit ? localizeNewsPost(hit, locale) : null;
 }
 
 export async function fetchLocalNewsPostBySlug(slug: string): Promise<LocalNewsPost | null> {

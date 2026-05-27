@@ -1,0 +1,24 @@
+/** English content for `data/news-posts.json` (keyed by slug). */
+export const newsPostsEn: Record<
+  string,
+  { title: string; excerptPlain: string; descriptionPlain: string; bodyHtml: string }
+> = {
+  "taekwon-do-prvenstvo-hrvatske-odrzano-u-zapresicu": {
+    title: "Croatian Taekwon-Do Championship held in Zaprešić",
+    excerptPlain:
+      "Dear friends,\nHere are a few photos of our excellent competitors from the Croatian Taekwon-Do Championship in Zaprešić a week ago. We are pleased with the performances and medals won. Still, medals are not the only goal — our aim is successful work and progress guided by Taekwon-Do ideals: courtesy, integrity, perseverance, self-control, and an indomitable spirit. That comes first in our work, then everything else… We do regret that several outstanding members could not compete for various reasons — work obligations, illness, and so on. There would have been more medals, but several major competitions await us this year, so there will be more opportunities.\nBest wishes to all 🙂",
+    descriptionPlain:
+      "Dear friends,\nHere are a few photos of our excellent competitors from the Croatian Taekwon-Do Championship in Zaprešić a week ago. We are pleased with the performances and medals won. Still, medals are not the only goal — our aim is successful work and progress guided by Taekwon-Do ideals: courtesy, integrity, perseverance, self-control, and an indomitable spirit. That comes first in our work, then everything else… We do regret that several outstanding members could not compete for various reasons — work obligations, illness, and so on. There would have been more medals, but several major competitions await us this year, so there will be more opportunities.\nBest wishes to all 🙂",
+    bodyHtml:
+      '<div class="news-body">Dear friends,<br />\nHere are a few photos of our excellent competitors from the Croatian Taekwon-Do Championship in Zaprešić a week ago. We are pleased with the performances and medals won. Still, medals are not the only goal — our aim is successful work and progress guided by Taekwon-Do ideals: courtesy, integrity, perseverance, self-control, and an indomitable spirit. That comes first in our work, then everything else… We do regret that several outstanding members could not compete for various reasons — work obligations, illness, and so on. There would have been more medals, but several major competitions await us this year, so there will be more opportunities.<br />\nBest wishes to all 🙂</div>',
+  },
+  "matej-mioc-osvojio-prvo-mjesto-i-zlatnu-medalju-na-studentskom-prvenstvu-hrvatsk": {
+    title: "Matej Mioč wins first place and gold at the Croatian student championship",
+    excerptPlain:
+      'Dear friends,\nOur Matej Mioč has just won first place and a gold medal at the Croatian student championship in the heavy category in patterns (forms). He fully deserves congratulations — we are proud of him and warmly congratulate him on behalf of Taekwon-Do Club "Split". Matej had trained in several clubs before, but only in our club did he get the opportunity he made the most of. This is already his second medal — a month and a half ago at the Croatian championship in patterns he won bronze.\nFrom next week we will have more training sessions and we are already enrolling new members.',
+    descriptionPlain:
+      'Dear friends,\nOur Matej Mioč has just won first place and a gold medal at the Croatian student championship in the heavy category in patterns (forms). He fully deserves congratulations — we are proud of him and warmly congratulate him on behalf of Taekwon-Do Club "Split". Matej had trained in several clubs before, but only in our club did he get the opportunity he made the most of. This is already his second medal — a month and a half ago at the Croatian championship in patterns he won bronze.\nFrom next week we will have more training sessions and we are already enrolling new members. Contact us whenever you like… More about videos and other content in the videos section.\nBest wishes to all.',
+    bodyHtml:
+      '<div class="news-body">Dear friends,<br />\nOur Matej Mioč has just won first place and a gold medal at the Croatian student championship in the heavy category in patterns (forms). He fully deserves congratulations — we are proud of him and warmly congratulate him on behalf of Taekwon-Do Club &quot;Split&quot; and we congratulate him from the heart. Matej had trained in several clubs before, but only in our club did he get the opportunity he made the most of. This is already his second medal — a month and a half ago at the Croatian championship in patterns he won bronze. <br />\nFrom next week we will have more training sessions and we are already enrolling new members. Contact us whenever you like… More about videos and other content in the videos section.<br />\nBest wishes to all.</div>',
+  },
+};

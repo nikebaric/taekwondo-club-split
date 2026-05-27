@@ -14,27 +14,26 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { GalleryAlbum } from "@/config/gallery";
-import { countAlbumMedia, getAlbumCover } from "@/config/gallery";
+import { getAlbumCover } from "@/config/gallery";
+import type { Locale } from "@/i18n/config";
+import type { Dictionary } from "@/i18n/dictionaries/hr";
+import { galleryMediaLabel } from "@/i18n/gallery-media-label";
+import { localizedPath } from "@/i18n/routing";
 
-function mediaLabel(album: GalleryAlbum): string {
-  const { images, videos } = countAlbumMedia(album);
-  const parts: string[] = [];
-  if (images === 1) parts.push("1 fotografija");
-  else if (images >= 2 && images <= 4) parts.push(`${images} fotografije`);
-  else if (images > 0) parts.push(`${images} fotografija`);
-
-  if (videos === 1) parts.push("1 video");
-  else if (videos > 1) parts.push(`${videos} video zapisa`);
-
-  return parts.join(" · ") || "Album";
-}
-
-export function GalleryAlbumCard({ album }: { album: GalleryAlbum }) {
+export function GalleryAlbumCard({
+  album,
+  locale,
+  t,
+}: {
+  album: GalleryAlbum;
+  locale: Locale;
+  t: Dictionary;
+}) {
   const cover = getAlbumCover(album);
 
   return (
     <Link
-      href={`/galerija/${album.slug}`}
+      href={localizedPath(`/galerija/${album.slug}`, locale)}
       className="group block overflow-hidden rounded-2xl border border-slate-200 bg-[var(--surface)] shadow-[var(--shadow-card)] transition-all duration-300 hover:-translate-y-1 hover:border-[var(--accent)]/35 hover:shadow-[var(--shadow-card-hover)]"
     >
       <div className="relative aspect-[16/10] w-full bg-black/40">
@@ -51,7 +50,7 @@ export function GalleryAlbumCard({ album }: { album: GalleryAlbum }) {
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
         <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-5">
           <p className="text-xs font-medium uppercase tracking-wider text-[var(--brand-gold)]">
-            {mediaLabel(album)}
+            {galleryMediaLabel(album, locale, t)}
           </p>
           <h2 className="mt-1 font-[family-name:var(--font-display)] text-xl tracking-[0.04em] text-white sm:text-2xl">
             {album.title}

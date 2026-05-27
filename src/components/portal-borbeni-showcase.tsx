@@ -1,9 +1,17 @@
 import Image from "next/image";
-import { PORTAL_BRAND_NAME, newsPortalCopy } from "@/config/news-portal";
+import { PORTAL_BRAND_NAME } from "@/config/news-portal";
 import { portalBorbeniGalleryImages, portalBorbeniHero } from "@/config/portal-borbeni-gallery";
+import type { Locale } from "@/i18n/config";
 
 /** Hero + mreža fotografija na stranici portala. */
-export function PortalBorbeniShowcase() {
+export function PortalBorbeniShowcase({
+  locale,
+  subtitle,
+}: {
+  locale: Locale;
+  subtitle: string;
+}) {
+  void locale;
   return (
     <div className="space-y-10">
       <figure className="relative mx-auto w-full max-w-6xl overflow-hidden rounded-2xl border border-slate-200 shadow-[var(--shadow-card)] aspect-[21/9] min-h-[200px] max-h-[min(52vh,520px)]">
@@ -23,9 +31,7 @@ export function PortalBorbeniShowcase() {
           <p className="font-[family-name:var(--font-display)] text-xl tracking-[0.1em] text-white sm:text-2xl md:text-3xl">
             {PORTAL_BRAND_NAME}
           </p>
-          <p className="mt-2 max-w-xl text-sm leading-relaxed text-white/90 sm:text-base">
-            {newsPortalCopy.homeSubtitle}
-          </p>
+          <p className="mt-2 max-w-xl text-sm leading-relaxed text-white/90 sm:text-base">{subtitle}</p>
         </figcaption>
       </figure>
 

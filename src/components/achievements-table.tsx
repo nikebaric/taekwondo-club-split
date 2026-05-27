@@ -22,13 +22,15 @@ import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 import {
   ACHIEVEMENT_BELTS,
-  pojasLabel,
   type AchievementAgeGroup,
   type AchievementBelt,
   type AchievementDiscipline,
   type AchievementMedal,
   type ClubAchievement,
 } from "@/config/club-achievements";
+import type { Locale } from "@/i18n/config";
+import { getDictionary } from "@/i18n/get-dictionary";
+import type { Dictionary } from "@/i18n/dictionaries/hr";
 
 // Union types for filter state: "all" means no filter is applied.
 type MedalFilter = "all" | AchievementMedal;
@@ -41,13 +43,16 @@ type SortKey = "date-desc" | "date-asc" | "name-asc" | "name-desc" | "competitio
 
 const MEDAL_RANK: Record<AchievementMedal, number> = { bronze: 0, silver: 1, gold: 2 };
 
-const HR_COLLATOR = new Intl.Collator("hr", { sensitivity: "base" });
+function collatorFor(locale: Locale) {
+  return new Intl.Collator(locale === "en" ? "en" : "hr", { sensitivity: "base" });
+}
 
 function compareDateDesc(a: ClubAchievement, b: ClubAchievement): number {
   return new Date(b.date).getTime() - new Date(a.date).getTime();
 }
 
-function sortAchievements(rows: ClubAchievement[], sortKey: SortKey): ClubAchievement[] {
+function sortAchievements(rows: ClubAchievement[], sortKey: SortKey, locale: Locale): ClubAchievement[] {
+  const collator = collatorFor(locale);
   const copy = [...rows];
   switch (sortKey) {
     case "date-desc":
@@ -58,19 +63,19 @@ function sortAchievements(rows: ClubAchievement[], sortKey: SortKey): ClubAchiev
       break;
     case "name-asc":
       copy.sort((a, b) => {
-        const c = HR_COLLATOR.compare(a.name, b.name);
+        const c = collator.compare(a.name, b.name);
         return c !== 0 ? c : compareDateDesc(a, b);
       });
       break;
     case "name-desc":
       copy.sort((a, b) => {
-        const c = HR_COLLATOR.compare(b.name, a.name);
+        const c = collator.compare(b.name, a.name);
         return c !== 0 ? c : compareDateDesc(a, b);
       });
       break;
     case "competition-asc":
       copy.sort((a, b) => {
-        const c = HR_COLLATOR.compare(a.competition, b.competition);
+        const c = collator.compare(a.competition, b.competition);
         return c !== 0 ? c : compareDateDesc(a, b);
       });
       break;
@@ -86,10 +91,10 @@ function sortAchievements(rows: ClubAchievement[], sortKey: SortKey): ClubAchiev
   return copy;
 }
 
-function medalLabel(m: AchievementMedal): string {
-  if (m === "gold") return "Zlato";
-  if (m === "silver") return "Srebro";
-  return "Bronca";
+function medalLabel(m: AchievementMedal, rt: Dictionary["resultsTable"]): string {
+  if (m === "gold") return rt.gold;
+  if (m === "silver") return rt.silver;
+  return rt.bronze;
 }
 
 function medalBadgeClass(m: AchievementMedal): string {
@@ -98,8 +103,8 @@ function medalBadgeClass(m: AchievementMedal): string {
   return "bg-orange-100 text-orange-950 ring-orange-300/70";
 }
 
-function disciplineLabel(d: AchievementDiscipline): string {
-  return d === "forme" ? "Forme" : "Borbe";
+function disciplineLabel(d: AchievementDiscipline, rt: Dictionary["resultsTable"]): string {
+  return d === "forme" ? rt.forme : rt.sparring;
 }
 
 function disciplineBadgeClass(d: AchievementDiscipline): string {
@@ -108,33 +113,45 @@ function disciplineBadgeClass(d: AchievementDiscipline): string {
     : "bg-rose-50 text-rose-900 ring-rose-200/90";
 }
 
-function ageGroupLabel(ag: AchievementAgeGroup): string {
-  if (ag === "seniori") return "Seniori";
-  if (ag === "juniori") return "Juniori";
-  return "Kadeti";
+function ageGroupLabel(ag: AchievementAgeGroup, rt: Dictionary["resultsTable"]): string {
+  if (ag === "seniori") return rt.seniors;
+  if (ag === "juniori") return rt.juniors;
+  return rt.cadets;
 }
 
-function formatDisplayDate(iso: string): string {
+function formatDisplayDate(iso: string, locale: Locale): string {
   const d = new Date(iso + "T12:00:00");
   if (Number.isNaN(d.getTime())) return iso;
-  return d.toLocaleDateString("hr-HR", { day: "2-digit", month: "2-digit", year: "numeric" });
+  return d.toLocaleDateString(locale === "en" ? "en-GB" : "hr-HR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
 }
 
-function AchievementRowCells({ row }: { row: ClubAchievement }) {
+function AchievementRowCells({
+  row,
+  rt,
+  locale,
+}: {
+  row: ClubAchievement;
+  rt: Dictionary["resultsTable"];
+  locale: Locale;
+}) {
   return (
     <>
       <td className="px-2 py-3 align-top sm:px-3 lg:px-4">
         <span
           className={`inline-flex rounded-full px-2 py-0.5 text-[11px] font-semibold ring-1 sm:px-2.5 sm:py-1 sm:text-xs ${medalBadgeClass(row.medal)}`}
         >
-          {medalLabel(row.medal)}
+          {medalLabel(row.medal, rt)}
         </span>
       </td>
       <td className="px-2 py-3 align-top sm:px-3 lg:px-4">
         <span
           className={`inline-flex rounded-full px-2 py-0.5 text-[11px] font-semibold ring-1 sm:px-2.5 sm:py-1 sm:text-xs ${disciplineBadgeClass(row.discipline)}`}
         >
-          {disciplineLabel(row.discipline)}
+          {disciplineLabel(row.discipline, rt)}
         </span>
       </td>
       <td className="px-2 py-2 text-center align-middle sm:px-3 lg:px-4">
@@ -160,10 +177,10 @@ function AchievementRowCells({ row }: { row: ClubAchievement }) {
       </td>
       <td className="min-w-0 break-words px-2 py-3 text-slate-700 sm:px-3 lg:px-4">{row.competition}</td>
       <td className="whitespace-nowrap px-2 py-3 tabular-nums text-[var(--muted)] sm:px-3 lg:px-4">
-        {formatDisplayDate(row.date)}
+        {formatDisplayDate(row.date, locale)}
       </td>
       <td className="min-w-0 px-2 py-3 text-slate-700 sm:px-3 lg:px-4">
-        {row.ageGroup ? ageGroupLabel(row.ageGroup) : "—"}
+        {row.ageGroup ? ageGroupLabel(row.ageGroup, rt) : "—"}
       </td>
       <td className="min-w-0 break-words px-2 py-3 text-slate-700 sm:px-3 lg:px-4">
         {row.kategorija?.trim() ? row.kategorija.trim() : "—"}
@@ -171,7 +188,7 @@ function AchievementRowCells({ row }: { row: ClubAchievement }) {
       <td className="px-2 py-3 sm:px-3 lg:px-4">
         {row.pojas ? (
           <span className="inline-flex rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-slate-800 ring-1 ring-slate-200/90 sm:text-xs">
-            {pojasLabel(row.pojas)}
+            {rt.belts[row.pojas]}
           </span>
         ) : (
           "—"
@@ -183,7 +200,8 @@ function AchievementRowCells({ row }: { row: ClubAchievement }) {
 
 const PAGE_SIZE_OPTIONS = [10, 20, 50] as const;
 
-export function AchievementsTable({ rows }: { rows: ClubAchievement[] }) {
+export function AchievementsTable({ rows, locale }: { rows: ClubAchievement[]; locale: Locale }) {
+  const rt = getDictionary(locale).resultsTable;
   // Each filter gets its own useState — simpler than managing one big state object.
   const [medalFilter, setMedalFilter] = useState<MedalFilter>("all");
   const [disciplineFilter, setDisciplineFilter] = useState<DisciplineFilter>("all");
@@ -211,7 +229,7 @@ export function AchievementsTable({ rows }: { rows: ClubAchievement[] }) {
     });
   }, [rows, medalFilter, disciplineFilter, ageFilter, beltFilter]);
 
-  const sorted = useMemo(() => sortAchievements(filtered, sortKey), [filtered, sortKey]);
+  const sorted = useMemo(() => sortAchievements(filtered, sortKey, locale), [filtered, sortKey, locale]);
 
   const totalPages = Math.max(1, Math.ceil(sorted.length / pageSize) || 1);
   const currentPage = Math.min(Math.max(1, page), totalPages);
@@ -238,14 +256,14 @@ export function AchievementsTable({ rows }: { rows: ClubAchievement[] }) {
     <div className="space-y-8">
       <div className="flex flex-col gap-4">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500">Medalja</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500">{rt.medal}</p>
           <div className="mt-2 flex flex-wrap gap-2">
             {(
               [
-                ["all", "Svi"],
-                ["gold", "Zlato"],
-                ["silver", "Srebro"],
-                ["bronze", "Bronca"],
+                ["all", rt.all],
+                ["gold", rt.gold],
+                ["silver", rt.silver],
+                ["bronze", rt.bronze],
               ] as const
             ).map(([key, label]) => (
               <button
@@ -264,13 +282,13 @@ export function AchievementsTable({ rows }: { rows: ClubAchievement[] }) {
           </div>
         </div>
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500">Disciplina</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500">{rt.discipline}</p>
           <div className="mt-2 flex flex-wrap gap-2">
             {(
               [
-                ["all", "Svi"],
-                ["forme", "Forme"],
-                ["borbe", "Borbe"],
+                ["all", rt.all],
+                ["forme", rt.forme],
+                ["borbe", rt.sparring],
               ] as const
             ).map(([key, label]) => (
               <button
@@ -290,14 +308,14 @@ export function AchievementsTable({ rows }: { rows: ClubAchievement[] }) {
         </div>
         {hasAgeGroups ? (
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500">Dobna skupina</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500">{rt.ageGroup}</p>
             <div className="mt-2 flex flex-wrap gap-2">
               {(
                 [
-                  ["all", "Svi"],
-                  ["seniori", "Seniori"],
-                  ["juniori", "Juniori"],
-                  ["kadeti", "Kadeti"],
+                  ["all", rt.all],
+                  ["seniori", rt.seniors],
+                  ["juniori", rt.juniors],
+                  ["kadeti", rt.cadets],
                 ] as const
               ).map(([key, label]) => (
                 <button
@@ -318,7 +336,7 @@ export function AchievementsTable({ rows }: { rows: ClubAchievement[] }) {
         ) : null}
         {hasBelts ? (
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500">Pojas</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500">{rt.belt}</p>
             <div className="mt-2 flex flex-wrap gap-2">
               <button
                 type="button"
@@ -329,7 +347,7 @@ export function AchievementsTable({ rows }: { rows: ClubAchievement[] }) {
                     : "border border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
                 }`}
               >
-                Svi
+                {rt.all}
               </button>
               {ACHIEVEMENT_BELTS.map((belt) => (
                 <button
@@ -342,7 +360,7 @@ export function AchievementsTable({ rows }: { rows: ClubAchievement[] }) {
                       : "border border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
                   }`}
                 >
-                  {pojasLabel(belt)}
+                  {rt.belts[belt]}
                 </button>
               ))}
             </div>
@@ -354,7 +372,7 @@ export function AchievementsTable({ rows }: { rows: ClubAchievement[] }) {
       <div className="mt-10 space-y-3 md:hidden">
         {sorted.length === 0 ? (
           <div className="rounded-2xl border border-slate-200 bg-[var(--surface)] px-4 py-10 text-center text-sm text-[var(--muted)] shadow-sm">
-            Nema rezultata za odabrane filtere.
+            {rt.emptyFilters}
           </div>
         ) : (
           paged.map((row) => (
@@ -384,37 +402,35 @@ export function AchievementsTable({ rows }: { rows: ClubAchievement[] }) {
                     <span
                       className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ${medalBadgeClass(row.medal)}`}
                     >
-                      {medalLabel(row.medal)}
+                      {medalLabel(row.medal, rt)}
                     </span>
                     <span
                       className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ${disciplineBadgeClass(row.discipline)}`}
                     >
-                      {disciplineLabel(row.discipline)}
+                      {disciplineLabel(row.discipline, rt)}
                     </span>
                   </div>
-                  <p className="mt-2 text-xs font-semibold uppercase tracking-wider text-slate-500">
-                    Ime i prezime
-                  </p>
+                  <p className="mt-2 text-xs font-semibold uppercase tracking-wider text-slate-500">{rt.name}</p>
                   <p className="mt-0.5 font-medium text-slate-900">{row.name}</p>
                   <p className="mt-1 text-sm text-slate-700">{row.competition}</p>
                 </div>
               </div>
               <dl className="mt-3 grid gap-1.5 text-sm text-slate-600">
                 <div className="flex flex-wrap gap-x-2 gap-y-0.5">
-                  <dt className="font-medium text-slate-500">Datum</dt>
-                  <dd className="tabular-nums text-[var(--muted)]">{formatDisplayDate(row.date)}</dd>
+                  <dt className="font-medium text-slate-500">{rt.date}</dt>
+                  <dd className="tabular-nums text-[var(--muted)]">{formatDisplayDate(row.date, locale)}</dd>
                 </div>
                 <div className="flex flex-wrap gap-x-2 gap-y-0.5">
-                  <dt className="font-medium text-slate-500">Dobna skup.</dt>
-                  <dd>{row.ageGroup ? ageGroupLabel(row.ageGroup) : "—"}</dd>
+                  <dt className="font-medium text-slate-500">{rt.ageGroupShort}</dt>
+                  <dd>{row.ageGroup ? ageGroupLabel(row.ageGroup, rt) : "—"}</dd>
                 </div>
                 <div className="flex flex-wrap gap-x-2 gap-y-0.5">
-                  <dt className="font-medium text-slate-500">Kategorija</dt>
+                  <dt className="font-medium text-slate-500">{rt.category}</dt>
                   <dd className="min-w-0 break-words">{row.kategorija?.trim() ? row.kategorija.trim() : "—"}</dd>
                 </div>
                 <div className="flex flex-wrap gap-x-2 gap-y-0.5">
-                  <dt className="font-medium text-slate-500">Pojas</dt>
-                  <dd>{row.pojas ? pojasLabel(row.pojas) : "—"}</dd>
+                  <dt className="font-medium text-slate-500">{rt.belt}</dt>
+                  <dd>{row.pojas ? rt.belts[row.pojas] : "—"}</dd>
                 </div>
               </dl>
             </div>
@@ -427,28 +443,28 @@ export function AchievementsTable({ rows }: { rows: ClubAchievement[] }) {
         <table className="w-full table-fixed border-collapse text-left text-xs lg:text-sm">
           <thead className="border-b border-slate-200 bg-slate-50 text-[10px] uppercase tracking-wider text-slate-500 lg:text-xs">
             <tr>
-              <th className="w-[8%] py-3 pl-3 pr-1 font-semibold lg:py-4 lg:pl-4">Medalja</th>
-              <th className="w-[9%] px-1 py-3 font-semibold lg:px-2 lg:py-4">Disciplina</th>
-              <th className="w-[7%] px-1 py-3 text-center font-semibold lg:px-2 lg:py-4">Slika</th>
-              <th className="w-[15%] px-1 py-3 font-semibold lg:px-2 lg:py-4">Ime i prezime</th>
-              <th className="w-[20%] px-1 py-3 font-semibold lg:px-2 lg:py-4">Natjecanje</th>
-              <th className="w-[10%] px-1 py-3 font-semibold lg:px-2 lg:py-4">Datum</th>
-              <th className="w-[10%] px-1 py-3 font-semibold lg:px-2 lg:py-4">Dobna sk.</th>
-              <th className="w-[11%] px-1 py-3 font-semibold lg:px-2 lg:py-4">Kategorija</th>
-              <th className="w-[10%] py-3 pl-1 pr-3 font-semibold lg:py-4 lg:pr-4">Pojas</th>
+              <th className="w-[8%] py-3 pl-3 pr-1 font-semibold lg:py-4 lg:pl-4">{rt.medal}</th>
+              <th className="w-[9%] px-1 py-3 font-semibold lg:px-2 lg:py-4">{rt.discipline}</th>
+              <th className="w-[7%] px-1 py-3 text-center font-semibold lg:px-2 lg:py-4">{rt.photo}</th>
+              <th className="w-[15%] px-1 py-3 font-semibold lg:px-2 lg:py-4">{rt.name}</th>
+              <th className="w-[20%] px-1 py-3 font-semibold lg:px-2 lg:py-4">{rt.competition}</th>
+              <th className="w-[10%] px-1 py-3 font-semibold lg:px-2 lg:py-4">{rt.date}</th>
+              <th className="w-[10%] px-1 py-3 font-semibold lg:px-2 lg:py-4">{rt.ageGroupShort}</th>
+              <th className="w-[11%] px-1 py-3 font-semibold lg:px-2 lg:py-4">{rt.category}</th>
+              <th className="w-[10%] py-3 pl-1 pr-3 font-semibold lg:py-4 lg:pr-4">{rt.belt}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-200">
             {sorted.length === 0 ? (
               <tr>
                 <td colSpan={9} className="px-4 py-10 text-center text-[var(--muted)]">
-                  Nema rezultata za odabrane filtere.
+                  {rt.emptyFilters}
                 </td>
               </tr>
             ) : (
               paged.map((row) => (
                 <tr key={row.id} className="hover:bg-slate-50/80">
-                  <AchievementRowCells row={row} />
+                  <AchievementRowCells row={row} rt={rt} locale={locale} />
                 </tr>
               ))
             )}
@@ -461,7 +477,7 @@ export function AchievementsTable({ rows }: { rows: ClubAchievement[] }) {
           <div className="flex flex-col gap-3 border-t border-slate-200 pt-6 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between sm:gap-4">
             <div className="flex flex-col gap-1.5">
               <label htmlFor="ach-sort" className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500">
-                Sortiranje
+                {rt.sort}
               </label>
               <select
                 id="ach-sort"
@@ -469,17 +485,17 @@ export function AchievementsTable({ rows }: { rows: ClubAchievement[] }) {
                 onChange={(e) => setSortKey(e.target.value as SortKey)}
                 className="max-w-xs rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-200"
               >
-                <option value="date-desc">Datum (najnovije prvo)</option>
-                <option value="date-asc">Datum (najstarije prvo)</option>
-                <option value="name-asc">Ime i prezime (A–Ž)</option>
-                <option value="name-desc">Ime i prezime (Ž–A)</option>
-                <option value="competition-asc">Natjecanje (A–Ž)</option>
-                <option value="medal-desc">Medalja (zlato prvo)</option>
+                <option value="date-desc">{rt.sortDateDesc}</option>
+                <option value="date-asc">{rt.sortDateAsc}</option>
+                <option value="name-asc">{rt.sortNameAsc}</option>
+                <option value="name-desc">{rt.sortNameDesc}</option>
+                <option value="competition-asc">{rt.sortCompetitionAsc}</option>
+                <option value="medal-desc">{rt.sortMedalDesc}</option>
               </select>
             </div>
             <div className="flex flex-col gap-1.5">
               <label htmlFor="ach-page-size" className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500">
-                Po stranici
+                {rt.perPage}
               </label>
               <select
                 id="ach-page-size"
@@ -489,27 +505,27 @@ export function AchievementsTable({ rows }: { rows: ClubAchievement[] }) {
               >
                 {PAGE_SIZE_OPTIONS.map((n) => (
                   <option key={n} value={n}>
-                    {n} redaka
+                    {n} {rt.rowsSuffix}
                   </option>
                 ))}
               </select>
             </div>
             <p className="text-sm text-[var(--muted)] sm:ml-auto sm:text-right">
-              Prikazano{" "}
+              {rt.showing}{" "}
               <span className="tabular-nums font-medium text-slate-700">
                 {rangeFrom}–{rangeTo}
               </span>{" "}
-              od <span className="tabular-nums font-medium text-slate-700">{sorted.length}</span>
+              {rt.of} <span className="tabular-nums font-medium text-slate-700">{sorted.length}</span>
             </p>
           </div>
 
           {totalPages > 1 ? (
             <nav
               className="flex flex-col items-stretch gap-3 rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
-              aria-label="Straničenje rezultata"
+              aria-label={rt.pagination}
             >
               <p className="text-center text-sm text-[var(--muted)] sm:text-left">
-                Stranica{" "}
+                {rt.page}{" "}
                 <span className="font-semibold text-slate-800">
                   {currentPage} / {totalPages}
                 </span>
@@ -521,7 +537,7 @@ export function AchievementsTable({ rows }: { rows: ClubAchievement[] }) {
                   onClick={() => setPage((p) => Math.max(1, p - 1))}
                   className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-800 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
                 >
-                  Prethodna
+                  {rt.prev}
                 </button>
                 <button
                   type="button"
@@ -529,7 +545,7 @@ export function AchievementsTable({ rows }: { rows: ClubAchievement[] }) {
                   onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                   className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-800 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
                 >
-                  Sljedeća
+                  {rt.next}
                 </button>
               </div>
             </nav>
