@@ -176,7 +176,7 @@ export function HeaderAccount({ memberName, memberEmail, adminHubVisible }: Prop
       href={loginPath}
       className="hidden max-w-[13rem] rounded-full border border-slate-300 bg-white px-3 py-2 text-center text-xs font-semibold leading-snug text-slate-900 shadow-sm transition hover:border-slate-400 hover:bg-slate-50 lg:inline-flex lg:max-w-none lg:px-4 lg:text-sm"
     >
-      Prijava korisnika
+      Prijava
     </Link>
   );
 }
@@ -218,7 +218,7 @@ export function HeaderAccountMobile({ memberName, memberEmail }: Props) {
       href={loginPath}
       className="mt-2 block rounded-md border border-slate-200 bg-white px-3 py-2 text-center text-sm font-semibold text-slate-900 shadow-sm hover:bg-slate-50"
     >
-      Prijava korisnika
+      Prijava
     </Link>
   );
 }

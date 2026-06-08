@@ -223,7 +223,7 @@ export default async function Home({ params }: Props) {
               return (
                 <li key={post.id}>
                   <Link
-                    href={localizedPath(`/portal-novosti/${post.slug}`, locale)}
+                    href={localizedPath(`/novosti/${post.slug}`, locale)}
                     className="group block overflow-hidden rounded-2xl border border-slate-200 bg-[var(--surface)] shadow-[var(--shadow-card)] transition-all duration-300 hover:-translate-y-1 hover:border-[var(--accent)]/35 hover:shadow-[var(--shadow-card-hover)]"
                   >
                     <div className="relative aspect-[16/10] bg-slate-200">

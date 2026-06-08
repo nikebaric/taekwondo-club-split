@@ -1,3 +1,5 @@
+import type { GalleryImage } from "@/config/gallery";
+
 /**
  * Statičke slike za PORTAL BORBENI SPLIT (`public/images/portal-borbeni-split/`).
  * Redoslijed u galeriji — lijevo→desno, gore→dolje.
@@ -53,3 +55,9 @@ export const portalBorbeniGalleryImages = [
     alt: "Naslovnica časopisa Karate Ring (Branko Cikatić).",
   },
 ] as const;
+
+/** Hero + mreža — redoslijed za lightbox (strelicama / tipkovnicom). */
+export const portalBorbeniLightboxImages: readonly GalleryImage[] = [
+  { kind: "image", src: portalBorbeniHero.src, alt: portalBorbeniHero.alt },
+  ...portalBorbeniGalleryImages.map((img) => ({ kind: "image" as const, ...img })),
+];

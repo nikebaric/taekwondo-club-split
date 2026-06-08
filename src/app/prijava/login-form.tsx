@@ -61,7 +61,7 @@ export function LoginForm({ nextPath }: Props) {
   return (
     <>
       <h1 className="font-[family-name:var(--font-display)] text-3xl tracking-[0.06em] text-slate-900 sm:text-4xl">
-        Prijava korisnika
+        Prijava
       </h1>
       <form onSubmit={onSubmit} className="mt-10 space-y-5 text-left">
         <div>
@@ -105,7 +105,7 @@ export function LoginForm({ nextPath }: Props) {
           disabled={pending}
           className="mt-2 w-full rounded-full bg-[var(--accent)] px-6 py-3.5 text-sm font-semibold text-white shadow-[0_0_24px_-6px_var(--accent-glow)] transition hover:brightness-110 disabled:opacity-60"
         >
-          {pending ? "Prijava korisnika…" : "Prijava korisnika"}
+          {pending ? "Prijava…" : "Prijava"}
         </button>
       </form>
     </>

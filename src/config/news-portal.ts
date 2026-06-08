@@ -28,5 +28,5 @@ export const newsPortalCopy = {
   homeSubtitle: "Borilački sadržaj i vijesti kluba — objavljuju se izravno kroz web sučelje kluba.",
 
   emptyPosts:
-    "Još nema objava. Kad administrator objavi prvu novost (Prijava korisnika → nova novost), pojavit će se ovdje.",
+    "Još nema objava. Kad administrator objavi prvu novost (Prijava → nova novost), pojavit će se ovdje.",
 } as const;

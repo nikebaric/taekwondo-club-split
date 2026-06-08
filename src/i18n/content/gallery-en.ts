@@ -56,6 +56,18 @@ export const galleryAlbumsEn: Record<string, GalleryAlbumEnPatch> = {
         alt: "Coach and student on the mat",
         caption: "Training with the youngest",
       },
+      {
+        kind: "image",
+        src: "/galerija/trener-nenad-bulovic-mirko-bijelic-umberto-coce.png",
+        alt: "Left to right: Nenad Bulović, Mirko Bijelić, and Umberto Coce in the training hall",
+        caption: "Nenad Bulović, Mirko Bijelić, and Umberto Coce",
+      },
+      {
+        kind: "image",
+        src: "/galerija/trener-umberto-coce.png",
+        alt: "Umberto Coce in the sports hall",
+        caption: "Umberto Coce",
+      },
     ],
   },
   "trening-i-zivot-kluba": {
@@ -203,6 +215,18 @@ export const galleryAlbumsEn: Record<string, GalleryAlbumEnPatch> = {
         src: "/galerija/povijest-ictf-vi-dan-nenad-bulovic.png",
         alt: "ICTF Black Belt Certificate — Dr. sc. Nenad Bulović, VI DAN (2012)",
         caption: "ICTF — VI DAN black belt (Nenad Bulović)",
+      },
+      {
+        kind: "image",
+        src: "/galerija/povijest-wte-vi-dan-nenad-bulovic.png",
+        alt: "World Taekwondo Europe — 6th dan black belt certificate, Nenad Bulović (2020)",
+        caption: "WTE — 6th DAN black belt (Nenad Bulović, 2020)",
+      },
+      {
+        kind: "image",
+        src: "/galerija/povijest-wte-vi-dan-umberto-coce.png",
+        alt: "World Taekwondo Europe — 6th dan black belt certificate, Umberto Coce (2020)",
+        caption: "WTE — 6th DAN black belt (Umberto Coce, 2020)",
       },
       {
         kind: "image",

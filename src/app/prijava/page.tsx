@@ -27,7 +27,7 @@ import { sessionCookieName, verifySessionToken } from "@/lib/session";
 import { LoginForm } from "./login-form";
 
 export const metadata: Metadata = {
-  title: "Prijava korisnika",
+  title: "Prijava",
   description: "Prijava članova kluba za pristup klupskim novostima.",
 };
 

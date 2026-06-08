@@ -70,7 +70,7 @@ export function ClubTrainersSection({ locale, t }: { locale: Locale; t: Dictiona
                 {cs.clubFacebook}
               </Link>
               <Link
-                href={localizedPath("/portal-novosti", locale)}
+                href={localizedPath("/novosti", locale)}
                 className="inline-flex rounded-full border border-slate-300 bg-white px-6 py-3 text-sm font-semibold text-slate-800 shadow-sm hover:bg-slate-50"
               >
                 {PORTAL_BRAND_NAME}
