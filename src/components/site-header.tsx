@@ -59,6 +59,9 @@ export async function SiteHeader({ locale }: Props) {
         <div className="flex shrink-0 items-center gap-2 sm:gap-3">
           <LocaleSwitcher locale={locale} className="hidden sm:flex" />
           <HeaderAccount
+            locale={locale}
+            login={t.login}
+            adminLabel={t.common.admin}
             memberName={memberName}
             memberEmail={memberEmail}
             adminHubVisible={adminHubVisible}
@@ -114,7 +117,7 @@ function MobileNav({
             {t.common.admin}
           </CloseDetailsLink>
         ) : null}
-        <HeaderAccountMobile memberName={memberName} memberEmail={memberEmail} />
+        <HeaderAccountMobile locale={locale} login={t.login} memberName={memberName} memberEmail={memberEmail} />
       </div>
     </OutsideClickDetails>
   );

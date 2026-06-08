@@ -14,6 +14,8 @@
  */
 
 import { PORTAL_BRAND_NAME } from "@/config/news-portal";
+import type { Locale } from "@/i18n/config";
+import { localizedPath } from "@/i18n/routing";
 
 // `as const` at the end makes every property readonly and literal-typed.
 // This means `site.city` has type "Split" (literal), not `string` (wide).
@@ -148,8 +150,12 @@ export function phoneToTelHref(phone: string): string {
 /** Nav menu item and page title for /contact */
 export const contactPageLabel = "Kontakt" as const;
 
-/** Route for member / admin login (header button). */
+/** Route for member / admin login (header button), Croatian default URL. */
 export const loginPath = "/prijava?next=/admin" as const;
+
+export function adminLoginPath(locale: Locale, next = "/admin"): string {
+  return `${localizedPath("/prijava", locale)}?next=${encodeURIComponent(next)}`;
+}
 
 // Navigation array with `as const` — components can iterate this to render the
 // menu, and TypeScript knows the exact route strings at compile time (type-safe routing).

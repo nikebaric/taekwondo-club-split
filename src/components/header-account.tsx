@@ -20,29 +20,26 @@
 import Link from "next/link";
 import { CloseDetailsLink } from "@/components/close-details-link";
 import { OutsideClickDetails } from "@/components/outside-click-details";
-import { loginPath } from "@/config/site";
+import { adminLoginPath } from "@/config/site";
+import type { Locale } from "@/i18n/config";
+import type { Dictionary } from "@/i18n/dictionaries/hr";
 
-// TypeScript type for props shared between HeaderAccount and HeaderAccountMobile.
-// `string | null` is a union type — memberName is either a string or null.
 type Props = {
+  locale: Locale;
+  login: Dictionary["login"];
+  adminLabel?: string;
   memberName: string | null;
-  /** Displayed below the name when available (newer session cookies). */
   memberEmail?: string | null;
-  /** Link to /admin — only visible to logged-in club admins. */
   adminHubVisible?: boolean;
 };
 
-// Standalone async function (not a hook) — can be called from event handlers.
-// Uses fetch() to call the logout API, then does a full page navigation.
-async function signOutAndGoToLogin() {
+async function signOutAndGoToLogin(locale: Locale) {
   const res = await fetch("/api/auth/logout", {
     method: "POST",
     credentials: "same-origin",
   });
   if (!res.ok) return;
-  // window.location.assign() triggers a full page navigation (not client-side).
-  // This ensures the browser re-reads cookies and the server sees the new auth state.
-  window.location.assign("/prijava");
+  window.location.assign(adminLoginPath(locale));
 }
 
 /** Initials for the avatar (no profile picture in the session). */
@@ -105,7 +102,7 @@ function ChevronDown() {
  * returns entirely different JSX trees based on the auth state. This is cleaner
  * than hiding elements with CSS when the two states have very different markup.
  */
-export function HeaderAccount({ memberName, memberEmail, adminHubVisible }: Props) {
+export function HeaderAccount({ locale, login, adminLabel, memberName, memberEmail, adminHubVisible }: Props) {
   if (memberName) {
     const email = memberEmail?.trim() || null;
 
@@ -114,7 +111,7 @@ export function HeaderAccount({ memberName, memberEmail, adminHubVisible }: Prop
         <OutsideClickDetails className="group relative">
           <summary
             className="flex cursor-pointer list-none items-center gap-2 rounded-full py-1 pl-1 pr-2 text-sm font-semibold text-slate-900 transition hover:bg-slate-100/90 [&::-webkit-details-marker]:hidden"
-            aria-label={`${memberName} — korisnički izbornik`}
+            aria-label={`${memberName} — ${login.accountMenuSuffix}`}
           >
             <MemberAvatar name={memberName} />
             <span
@@ -130,7 +127,7 @@ export function HeaderAccount({ memberName, memberEmail, adminHubVisible }: Prop
               <div className="flex items-start gap-3">
                 <MemberAvatar name={memberName} size="lg" />
                 <div className="min-w-0 flex-1 pt-0.5">
-                  <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">Prijavljeni član</p>
+                  <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">{login.signedInMember}</p>
                   <p className="mt-1 truncate text-sm font-semibold text-slate-900" title={memberName}>
                     {memberName}
                   </p>
@@ -147,7 +144,7 @@ export function HeaderAccount({ memberName, memberEmail, adminHubVisible }: Prop
                 href="/admin"
                 className="block px-3 py-2.5 text-left text-sm font-semibold text-[var(--accent)] transition hover:bg-slate-100"
               >
-                Administracija
+                {adminLabel}
               </CloseDetailsLink>
             ) : null}
             {/* DOM manipulation in React: `.closest("details")` walks up the DOM tree
@@ -159,11 +156,11 @@ export function HeaderAccount({ memberName, memberEmail, adminHubVisible }: Prop
               onClick={(e) => {
                 const details = (e.currentTarget as HTMLElement).closest("details");
                 if (details) details.open = false;
-                void signOutAndGoToLogin();
+                void signOutAndGoToLogin(locale);
               }}
               className="mt-1 w-full px-3 py-2.5 text-left text-sm font-semibold text-slate-800 transition hover:bg-slate-100"
             >
-              Odjavi se
+              {login.signOut}
             </button>
           </div>
         </OutsideClickDetails>
@@ -173,16 +170,16 @@ export function HeaderAccount({ memberName, memberEmail, adminHubVisible }: Prop
 
   return (
     <Link
-      href={loginPath}
+      href={adminLoginPath(locale)}
       className="hidden max-w-[13rem] rounded-full border border-slate-300 bg-white px-3 py-2 text-center text-xs font-semibold leading-snug text-slate-900 shadow-sm transition hover:border-slate-400 hover:bg-slate-50 lg:inline-flex lg:max-w-none lg:px-4 lg:text-sm"
     >
-      Prijava
+      {login.headerButton}
     </Link>
   );
 }
 
 /** Mobile menu: name + sign-out in the same dropdown layout as the rest of the menu. */
-export function HeaderAccountMobile({ memberName, memberEmail }: Props) {
+export function HeaderAccountMobile({ locale, login, memberName, memberEmail }: Props) {
   if (memberName) {
     const email = memberEmail?.trim() || null;
 
@@ -191,7 +188,7 @@ export function HeaderAccountMobile({ memberName, memberEmail }: Props) {
         <div className="flex items-center gap-3 px-3 pb-2">
           <MemberAvatar name={memberName} size="sm" />
           <div className="min-w-0 flex-1">
-            <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Prijavljeni član</p>
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">{login.signedInMember}</p>
             <p className="truncate text-sm font-semibold text-slate-900" title={memberName}>
               {memberName}
             </p>
@@ -204,10 +201,10 @@ export function HeaderAccountMobile({ memberName, memberEmail }: Props) {
         ) : null}
         <button
           type="button"
-          onClick={() => void signOutAndGoToLogin()}
+          onClick={() => void signOutAndGoToLogin(locale)}
           className="mt-2 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-center text-sm font-semibold text-slate-900 shadow-sm transition hover:bg-slate-50"
         >
-          Odjavi se
+          {login.signOut}
         </button>
       </div>
     );
@@ -215,10 +212,10 @@ export function HeaderAccountMobile({ memberName, memberEmail }: Props) {
 
   return (
     <Link
-      href={loginPath}
+      href={adminLoginPath(locale)}
       className="mt-2 block rounded-md border border-slate-200 bg-white px-3 py-2 text-center text-sm font-semibold text-slate-900 shadow-sm hover:bg-slate-50"
     >
-      Prijava
+      {login.headerButton}
     </Link>
   );
 }
