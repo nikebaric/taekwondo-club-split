@@ -7,13 +7,14 @@ const PUBLIC_FILE = /\.[^/]+$/;
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  if (
-    pathname.startsWith("/api") ||
-    pathname.startsWith("/admin") ||
-    pathname.startsWith("/_next") ||
-    PUBLIC_FILE.test(pathname)
-  ) {
+  if (pathname.startsWith("/api") || pathname.startsWith("/_next") || PUBLIC_FILE.test(pathname)) {
     return NextResponse.next();
+  }
+
+  if (pathname.startsWith("/admin")) {
+    const response = NextResponse.next();
+    response.headers.set("x-locale", defaultLocale);
+    return response;
   }
 
   if (pathname === "/en" || pathname.startsWith("/en/")) {

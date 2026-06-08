@@ -110,16 +110,11 @@ export function HeaderAccount({ locale, login, adminLabel, memberName, memberEma
       <div className="hidden lg:block">
         <OutsideClickDetails className="group relative">
           <summary
-            className="flex cursor-pointer list-none items-center gap-2 rounded-full py-1 pl-1 pr-2 text-sm font-semibold text-slate-900 transition hover:bg-slate-100/90 [&::-webkit-details-marker]:hidden"
+            className="flex cursor-pointer list-none items-center gap-1 rounded-full py-1 pl-1 pr-1.5 text-sm font-semibold text-slate-900 transition hover:bg-slate-100/90 [&::-webkit-details-marker]:hidden"
             aria-label={`${memberName} — ${login.accountMenuSuffix}`}
+            title={memberName}
           >
-            <MemberAvatar name={memberName} />
-            <span
-              className="min-w-0 max-w-[min(100%,18rem)] truncate xl:max-w-[min(100%,22rem)]"
-              title={memberName}
-            >
-              {memberName}
-            </span>
+            <MemberAvatar name={memberName} size="sm" />
             <ChevronDown />
           </summary>
           <div className="absolute right-0 z-[60] mt-2 w-64 rounded-lg border border-[var(--border-subtle)] bg-[var(--surface)] py-2 shadow-xl">

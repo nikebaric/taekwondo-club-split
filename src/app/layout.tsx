@@ -3,9 +3,8 @@
  */
 import type { Metadata } from "next";
 import { DM_Sans, Bebas_Neue } from "next/font/google";
-import { headers } from "next/headers";
 import "./globals.css";
-import { defaultLocale, isLocale, type Locale } from "@/i18n/config";
+import { requestLocale } from "@/i18n/request-locale";
 import { siteMetadataBase } from "@/lib/site-url";
 
 const dmSans = DM_Sans({
@@ -22,12 +21,6 @@ const bebas = Bebas_Neue({
 export const metadata: Metadata = {
   metadataBase: siteMetadataBase(),
 };
-
-async function requestLocale(): Promise<Locale> {
-  const h = await headers();
-  const raw = h.get("x-locale");
-  return raw && isLocale(raw) ? raw : defaultLocale;
-}
 
 export default async function RootLayout({
   children,

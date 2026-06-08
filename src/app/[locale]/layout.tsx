@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { SiteFooter } from "@/components/site-footer";
-import { SiteHeader } from "@/components/site-header";
+import { SiteChrome } from "@/components/site-chrome";
 import { locales } from "@/i18n/config";
 import { getDictionary } from "@/i18n/get-dictionary";
 import { parseLocale } from "@/i18n/locale";
@@ -50,11 +49,5 @@ export default async function LocaleLayout({ children, params }: Props) {
   if (!locales.includes(raw as (typeof locales)[number])) notFound();
   const locale = parseLocale(raw);
 
-  return (
-    <>
-      <SiteHeader locale={locale} />
-      <main className="flex-1">{children}</main>
-      <SiteFooter locale={locale} />
-    </>
-  );
+  return <SiteChrome locale={locale}>{children}</SiteChrome>;
 }

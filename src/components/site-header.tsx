@@ -7,6 +7,7 @@ import { OutsideClickDetails } from "@/components/outside-click-details";
 import { site } from "@/config/site";
 import type { Locale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/get-dictionary";
+import type { Dictionary } from "@/i18n/dictionaries/hr";
 import { localizedPath } from "@/i18n/routing";
 import { getMemberSession, isAdminSession } from "@/lib/auth-check";
 
@@ -14,48 +15,62 @@ type Props = {
   locale: Locale;
 };
 
+type NavItem = Dictionary["nav"][number];
+
+const navLinkClass =
+  "relative whitespace-nowrap rounded-md px-1.5 py-2 text-[12px] font-medium uppercase tracking-tight text-slate-600 transition-colors duration-200 after:pointer-events-none after:absolute after:inset-x-1.5 after:bottom-1.5 after:h-0.5 after:origin-left after:scale-x-0 after:rounded-full after:bg-[var(--accent)] after:transition-transform hover:bg-slate-100/80 hover:text-slate-900 hover:after:scale-x-100 xl:px-2 xl:text-[13px] xl:after:inset-x-2";
+
+function DesktopNav({ locale, items }: { locale: Locale; items: readonly NavItem[] }) {
+  return (
+    <nav className="hidden min-w-0 flex-1 items-center justify-center gap-0 lg:flex xl:gap-0.5">
+      {items.map((item) => (
+        <Link key={item.href} href={localizedPath(item.href, locale)} className={navLinkClass}>
+          {item.label}
+        </Link>
+      ))}
+    </nav>
+  );
+}
+
 export async function SiteHeader({ locale }: Props) {
   const t = getDictionary(locale);
   const session = await getMemberSession();
   const memberName = session?.name ?? null;
   const memberEmail = session?.email ?? null;
   const adminHubVisible = await isAdminSession();
+  const signedIn = Boolean(memberName);
 
   return (
     <header className="sticky top-0 z-50 border-b border-[var(--border-subtle)] bg-[var(--surface)] shadow-[var(--shadow-sm)]">
-      <div className="mx-auto flex w-full max-w-[min(100%,90rem)] items-center justify-between gap-3 px-4 py-3 sm:gap-4 sm:px-6 sm:py-4 lg:gap-5">
+      <div className="mx-auto flex w-full max-w-[min(100%,90rem)] items-center justify-between gap-2 px-4 py-3 sm:gap-3 sm:px-6 sm:py-4 lg:gap-4">
         <Link
           href={localizedPath("/", locale)}
-          className="group flex shrink-0 items-center gap-2.5 rounded-lg outline-none ring-offset-2 ring-offset-white focus-visible:ring-2 focus-visible:ring-[var(--accent)]/35 sm:gap-3.5"
+          className={`group flex shrink-0 items-center rounded-lg outline-none ring-offset-2 ring-offset-white focus-visible:ring-2 focus-visible:ring-[var(--accent)]/35 ${signedIn ? "gap-2 sm:gap-2.5" : "gap-2.5 sm:gap-3.5"}`}
         >
           <Image
             src={site.logo}
             alt=""
             width={56}
             height={56}
-            className="h-11 w-11 shrink-0 object-contain sm:h-14 sm:w-14"
+            className={`shrink-0 object-contain ${signedIn ? "h-10 w-10 sm:h-11 sm:w-11" : "h-11 w-11 sm:h-14 sm:w-14"}`}
             priority
           />
           <div className="flex min-w-0 flex-col leading-tight">
-            <span className="font-[family-name:var(--font-display)] text-lg tracking-[0.08em] text-slate-900 sm:text-2xl">
+            <span
+              className={`font-[family-name:var(--font-display)] tracking-[0.08em] text-slate-900 ${signedIn ? "text-base sm:text-lg" : "text-lg sm:text-2xl"}`}
+            >
               {site.brand.line1.toUpperCase()}
             </span>
-            <span className="text-[10px] font-medium uppercase tracking-[0.3em] text-[var(--muted)] sm:text-[11px] sm:tracking-[0.35em]">
+            <span
+              className={`font-medium uppercase tracking-[0.3em] text-[var(--muted)] ${signedIn ? "hidden text-[10px] xl:block xl:text-[11px] xl:tracking-[0.35em]" : "text-[10px] sm:text-[11px] sm:tracking-[0.35em]"}`}
+            >
               {site.brand.line2}
             </span>
           </div>
         </Link>
-        <nav className="hidden min-w-0 flex-1 items-center justify-center gap-0 lg:flex xl:gap-0.5">
-          {t.nav.map((item) => (
-            <Link
-              key={item.href}
-              href={localizedPath(item.href, locale)}
-              className="relative whitespace-nowrap rounded-md px-1.5 py-2 text-[12px] font-medium uppercase tracking-tight text-slate-600 transition-colors duration-200 after:pointer-events-none after:absolute after:inset-x-1.5 after:bottom-1.5 after:h-0.5 after:origin-left after:scale-x-0 after:rounded-full after:bg-[var(--accent)] after:transition-transform hover:bg-slate-100/80 hover:text-slate-900 hover:after:scale-x-100 xl:px-2 xl:text-[13px] xl:after:inset-x-2"
-            >
-              {item.label}
-            </Link>
-          ))}
-        </nav>
+
+        <DesktopNav locale={locale} items={t.nav} />
+
         <div className="flex shrink-0 items-center gap-2 sm:gap-3">
           <LocaleSwitcher locale={locale} className="hidden sm:flex" />
           <HeaderAccount
