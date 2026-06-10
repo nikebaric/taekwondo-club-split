@@ -1,4 +1,5 @@
 import { PORTAL_BRAND_NAME } from "@/config/news-portal";
+import { adminPanelHr } from "@/i18n/dictionaries/admin-panel";
 
 export const hr = {
   meta: {
@@ -339,6 +340,7 @@ export const hr = {
     author: "Autor",
   },
   coachesRedirect: "Preusmjeravanje na O klubu…",
+  adminPanel: adminPanelHr,
 };
 
 export type Dictionary = typeof hr;

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { AdminNewsForm } from "@/app/admin/objava/admin-news-form";
+import { adminLoginRedirect, getAdminPage } from "@/i18n/admin-page";
 import { isAdminSession } from "@/lib/auth-check";
 import {
   extractDescriptionPlainFromBodyHtml,
@@ -14,20 +15,19 @@ import { findLocalPostBySlug } from "@/lib/news-store";
 type Props = { params: Promise<{ slug: string }> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { a } = await getAdminPage();
   const { slug } = await params;
   const post = await findLocalPostBySlug(slug);
-  return {
-    title: post ? `Uredi: ${post.title}` : "Uredi novost",
-  };
+  return { title: post ? a.news.editMeta(post.title) : a.news.editTitle };
 }
 
 export default async function AdminEditNewsPage({ params }: Props) {
+  const { locale, lp, a } = await getAdminPage();
+  const { slug } = await params;
   if (!(await isAdminSession())) {
-    const { slug } = await params;
-    redirect(`/prijava?next=${encodeURIComponent(`/admin/objava/${slug}`)}`);
+    redirect(adminLoginRedirect(`/admin/objava/${slug}`, locale));
   }
 
-  const { slug } = await params;
   const post = await findLocalPostBySlug(slug);
   if (!post) notFound();
 
@@ -45,11 +45,9 @@ export default async function AdminEditNewsPage({ params }: Props) {
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-16 sm:px-6 sm:py-24">
-      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--brand-gold)]">
-        Administracija
-      </p>
+      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--brand-gold)]">{a.eyebrow}</p>
       <h1 className="mt-3 font-[family-name:var(--font-display)] text-3xl tracking-[0.06em] text-slate-900 sm:text-4xl">
-        Uredi novost
+        {a.news.editTitle}
       </h1>
       <p className="mt-2 font-mono text-sm text-[var(--muted)]">{slug}</p>
       <div className="mt-10">
@@ -65,6 +63,9 @@ export default async function AdminEditNewsPage({ params }: Props) {
           existingImageSrcs={gallery.images}
           initialCoverSrc={initialCoverSrc}
           initialPublishedAtIso={post.date}
+          a={a}
+          listPath={lp("/admin/objava")}
+          newsPath={lp("/portal-novosti")}
         />
       </div>
     </div>

@@ -11,6 +11,14 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
+  if (pathname === "/en/admin" || pathname.startsWith("/en/admin/")) {
+    const url = request.nextUrl.clone();
+    url.pathname = pathname.slice(3) || "/admin";
+    const response = NextResponse.rewrite(url);
+    response.headers.set("x-locale", "en");
+    return response;
+  }
+
   if (pathname.startsWith("/admin")) {
     const response = NextResponse.next();
     response.headers.set("x-locale", defaultLocale);

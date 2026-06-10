@@ -1,29 +1,10 @@
-/**
- * AdminNewsForm — a complex form for creating and editing news articles.
- *
- * KEY CONCEPTS:
- * - **Complex form with file uploads:** Uses the native FormData API to collect all
- *   form data (text fields + file inputs) into a single object. FormData is sent
- *   directly via fetch (not as JSON) because file uploads require multipart encoding.
- * - **Multiple state variables:** `pending` tracks submission state, `error` holds
- *   error messages. Using separate `useState` calls (vs. one object) is simpler when
- *   states are updated independently.
- * - **useRef for form element access:** The PublishedDatePicker sub-component uses
- *   `useRef<HTMLInputElement>` to imperatively set the date input's value after mount.
- *   This avoids hydration mismatches between server and client.
- * - **mode prop pattern ("create" | "edit"):** A single component handles both
- *   creating and editing articles. The `mode` prop determines which API endpoint
- *   to call (POST vs PATCH) and which UI to show (different labels, delete button).
- * - **router.push() + router.refresh():** After saving, `push()` navigates to the
- *   article page, and `refresh()` forces Next.js to re-fetch server data so the
- *   new content appears immediately (not stale cached data).
- */
 "use client";
 
 import { useRouter } from "next/navigation";
 import { AdminBackNav } from "@/components/admin-back-nav";
 import { useEffect, useRef, useState } from "react";
 import { AdminGalleryFields } from "@/components/admin-gallery-fields";
+import type { AdminPanel } from "@/i18n/dictionaries/admin-panel";
 
 export type AdminNewsFormProps = {
   mode?: "create" | "edit";
@@ -36,8 +17,10 @@ export type AdminNewsFormProps = {
   hasYoutube?: boolean;
   existingImageSrcs?: string[];
   initialCoverSrc?: string | null;
-  /** ISO date (from JSON) for the pre-filled date field; for a new post defaults to today. */
   initialPublishedAtIso: string;
+  a: AdminPanel;
+  listPath: string;
+  newsPath: string;
 };
 
 function isoToDateInputValue(iso: string): string {
@@ -86,33 +69,29 @@ export function AdminNewsForm({
   existingImageSrcs,
   initialCoverSrc,
   initialPublishedAtIso,
+  a,
+  listPath,
+  newsPath,
 }: AdminNewsFormProps) {
   const router = useRouter();
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const f = a.newsForm;
 
-  // Form submission handler: collects all fields (text + files) via FormData.
-  // Unlike JSON.stringify, FormData supports file uploads natively.
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError(null);
     const form = e.currentTarget;
-    // `new FormData(form)` reads ALL inputs by their `name` attribute — including files.
-    // This is sent as multipart/form-data (the browser sets the Content-Type automatically).
     const fd = new FormData(form);
     setPending(true);
     try {
-      // form.elements.namedItem() accesses a specific input by name — a DOM API.
-      // Type assertion `as HTMLInputElement | null` tells TypeScript what we expect.
       const pubEl = form.elements.namedItem("publishedDate") as HTMLInputElement | null;
       if (!pubEl?.value?.trim()) {
-        setError("Odaberite datum objave.");
+        setError(f.pickDate);
         setPending(false);
         return;
       }
 
-      // Mode determines the HTTP method and URL:
-      // Create → POST /api/news, Edit → PATCH /api/news/:slug
       const isEdit = mode === "edit" && editSlug;
       const url = isEdit ? `/api/news/${encodeURIComponent(editSlug)}` : "/api/news";
       const method = isEdit ? "PATCH" : "POST";
@@ -123,30 +102,33 @@ export function AdminNewsForm({
       });
       const data = (await res.json()) as { ok?: boolean; slug?: string; error?: string };
       if (!res.ok || !data.ok || !data.slug) {
-        setError(data.error ?? "Spremanje nije uspjelo.");
+        setError(data.error ?? a.saveFailed);
         return;
       }
       if (!isEdit) {
         form.reset();
       }
-      // router.push() does client-side navigation to the new article.
-      // router.refresh() tells Next.js to re-fetch all Server Component data on the
-      // current (and navigated-to) page, ensuring fresh content from the server.
-      router.push(`/novosti/${data.slug}`);
+      router.push(`${newsPath}/${data.slug}`);
       router.refresh();
     } catch {
-      setError("Mrežna greška. Pokušajte ponovno.");
+      setError(a.networkErrorRetry);
     } finally {
       setPending(false);
     }
   }
 
   const submitLabel =
-    mode === "edit" ? (pending ? "Spremam…" : "Spremi izmjene") : pending ? "Objavljujem…" : "Objavi na novostima";
+    mode === "edit"
+      ? pending
+        ? a.saving
+        : a.saveChanges
+      : pending
+        ? f.publishing
+        : f.publish;
 
   async function onDeleteArticle() {
     if (mode !== "edit" || !editSlug) return;
-    if (!window.confirm("Sigurno želite obrisati cijeli članak? Ovo se ne može poništiti.")) return;
+    if (!window.confirm(f.deleteConfirm)) return;
     setPending(true);
     setError(null);
     try {
@@ -156,13 +138,13 @@ export function AdminNewsForm({
       });
       const data = (await res.json()) as { ok?: boolean; error?: string };
       if (!res.ok || !data.ok) {
-        setError(data.error ?? "Brisanje nije uspjelo.");
+        setError(data.error ?? a.deleteFailed);
         return;
       }
-      router.push("/admin/objava");
+      router.push(listPath);
       router.refresh();
     } catch {
-      setError("Mrežna greška.");
+      setError(a.networkError);
     } finally {
       setPending(false);
     }
@@ -173,13 +155,13 @@ export function AdminNewsForm({
       <form onSubmit={onSubmit} className="space-y-6">
         <div>
           <label htmlFor="publishedDate" className="block text-sm font-medium text-slate-800">
-            Datum objave
+            {f.publishedDate}
           </label>
           <PublishedDatePicker initialIso={initialPublishedAtIso} />
         </div>
         <div>
           <label htmlFor="title" className="block text-sm font-medium text-slate-800">
-            Naslov
+            {f.title}
           </label>
           <input
             id="title"
@@ -192,7 +174,7 @@ export function AdminNewsForm({
         </div>
         <div>
           <label htmlFor="description" className="block text-sm font-medium text-slate-800">
-            Opis / tekst
+            {f.body}
           </label>
           <textarea
             id="description"
@@ -206,30 +188,28 @@ export function AdminNewsForm({
         {mode === "edit" && hasGalleryImages ? (
           <label className="flex cursor-pointer items-center gap-2 text-sm text-slate-800">
             <input type="checkbox" name="remove_all_images" className="rounded border-slate-300" />
-            Ukloni sve slike iz članka (bez učitavanja novih)
+            {f.removeAllImages}
           </label>
         ) : null}
         <AdminGalleryFields
           mode={mode}
           existingImageSrcs={existingImageSrcs}
           initialCoverSrc={initialCoverSrc}
+          labels={a.galleryFields}
         />
         {mode === "edit" && hasGalleryVideos ? (
           <label className="flex cursor-pointer items-center gap-2 text-sm text-slate-800">
             <input type="checkbox" name="remove_all_videos" className="rounded border-slate-300" />
-            Ukloni sve lokalne video zapise (bez učitavanja novih)
+            {f.removeAllVideos}
           </label>
         ) : null}
         <div>
           <label htmlFor="videos" className="block text-sm font-medium text-slate-800">
-            Video datoteke (MP4 ili WebM, do 100 MB svaka)
+            {f.videos}
             {mode === "edit" ? (
-              <span className="font-normal text-[var(--muted)]">
-                {" "}
-                — nove datoteke zamjenjuju sve postojeće lokalne videe
-              </span>
+              <span className="font-normal text-[var(--muted)]">{f.videosEditNote}</span>
             ) : (
-              <span className="font-normal text-[var(--muted)]"> — jedan ili više zapisa odjednom</span>
+              <span className="font-normal text-[var(--muted)]">{f.videosCreateNote}</span>
             )}
           </label>
           <input
@@ -243,13 +223,11 @@ export function AdminNewsForm({
         </div>
         <div>
           <label htmlFor="youtube" className="block text-sm font-medium text-slate-800">
-            YouTube poveznice
+            {f.youtube}
           </label>
           <p className="mt-1 text-xs text-[var(--muted)]">
-            Jedan link po retku (watch ili embed URL).
-            {mode === "edit" && hasYoutube ? (
-              <span> Obrišite sve retke da uklonite sve YouTube ugradnje.</span>
-            ) : null}
+            {f.youtubeHint}
+            {mode === "edit" && hasYoutube ? <span>{f.youtubeClearHint}</span> : null}
           </p>
           <textarea
             id="youtube"
@@ -283,13 +261,13 @@ export function AdminNewsForm({
               onClick={() => void onDeleteArticle()}
               className="text-sm font-semibold text-red-700 underline-offset-2 hover:underline disabled:opacity-50"
             >
-              Obriši cijeli članak
+              {f.deleteArticle}
             </button>
           </div>
         ) : null}
 
         <div className="mt-8 text-center text-sm text-[var(--muted)]">
-          <AdminBackNav />
+          <AdminBackNav label={a.back} />
         </div>
       </form>
     </div>

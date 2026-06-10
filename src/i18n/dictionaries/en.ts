@@ -1,4 +1,5 @@
 import { PORTAL_BRAND_NAME } from "@/config/news-portal";
+import { adminPanelEn } from "@/i18n/dictionaries/admin-panel";
 import type { Dictionary } from "@/i18n/dictionaries/hr";
 
 export const en: Dictionary = {
@@ -340,4 +341,5 @@ export const en: Dictionary = {
     author: "Author",
   },
   coachesRedirect: "Redirecting to About…",
+  adminPanel: adminPanelEn,
 };

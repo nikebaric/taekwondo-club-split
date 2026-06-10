@@ -23,6 +23,7 @@ import { OutsideClickDetails } from "@/components/outside-click-details";
 import { adminLoginPath } from "@/config/site";
 import type { Locale } from "@/i18n/config";
 import type { Dictionary } from "@/i18n/dictionaries/hr";
+import { localizedPath } from "@/i18n/routing";
 
 type Props = {
   locale: Locale;
@@ -136,7 +137,7 @@ export function HeaderAccount({ locale, login, adminLabel, memberName, memberEma
             </div>
             {adminHubVisible ? (
               <CloseDetailsLink
-                href="/admin"
+                href={localizedPath("/admin", locale)}
                 className="block px-3 py-2.5 text-left text-sm font-semibold text-[var(--accent)] transition hover:bg-slate-100"
               >
                 {adminLabel}

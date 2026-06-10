@@ -154,7 +154,7 @@ export const contactPageLabel = "Kontakt" as const;
 export const loginPath = "/prijava?next=/admin" as const;
 
 export function adminLoginPath(locale: Locale, next = "/admin"): string {
-  return `${localizedPath("/prijava", locale)}?next=${encodeURIComponent(next)}`;
+  return `${localizedPath("/prijava", locale)}?next=${encodeURIComponent(localizedPath(next, locale))}`;
 }
 
 // Navigation array with `as const` — components can iterate this to render the
