@@ -1,9 +1,10 @@
 import { defaultLocale, type Locale } from "@/i18n/config";
 
-/** Path without /en prefix (e.g. /en/kontakt → /kontakt). */
+/** Path without locale prefix (/en/kontakt or /hr/kontakt → /kontakt). */
 export function stripLocalePrefix(pathname: string): string {
-  if (pathname === "/en") return "/";
+  if (pathname === "/en" || pathname === "/hr") return "/";
   if (pathname.startsWith("/en/")) return pathname.slice(3) || "/";
+  if (pathname.startsWith("/hr/")) return pathname.slice(3) || "/";
   return pathname;
 }
 

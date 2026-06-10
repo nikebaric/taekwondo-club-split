@@ -11,6 +11,12 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
+  if (pathname === "/hr" || pathname.startsWith("/hr/")) {
+    const url = request.nextUrl.clone();
+    url.pathname = pathname === "/hr" ? "/" : pathname.slice(3) || "/";
+    return NextResponse.redirect(url);
+  }
+
   if (pathname === "/en/admin" || pathname.startsWith("/en/admin/")) {
     const url = request.nextUrl.clone();
     url.pathname = pathname.slice(3) || "/admin";
